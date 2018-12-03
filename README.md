@@ -18,3 +18,5 @@ Features included:
 Planned features:
 - using mouse input for rotation
 - better calculations for much easier camera movement when camera is rotated
+- “Presets” for fast choosing of a specific angle/filter etc.
+- saving additional per-user presets
