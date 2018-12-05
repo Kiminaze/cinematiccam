@@ -14,9 +14,11 @@ Features included:
 - setting filter intensity
 - toggle minimap on / off
 
+Updates:
+- Config-Option: Don’t attach it to player and instead have it completely free moving (idea by @Syntasu )
+
 Planned features:
 - using mouse input for rotation
 - better calculations for much easier camera movement when camera is rotated
 - “Presets” for fast choosing of a specific angle/filter etc.
 - saving additional per-user presets
-- Config-Option: Don’t attach it to player and instead have it completely free moving (idea by @Syntasu )
