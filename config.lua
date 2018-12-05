@@ -14,6 +14,9 @@ Cfg.useCommand = true
 -- specify command string
 Cfg.command = "freecam"
 
+-- Show an extra option to have a completely free to move camera
+Cfg.detachOption = true
+
 -- value in meters
 -- default: 5.0
 -- used to prevent e.g. Meta-Gaming and Bug-Abuse (looking through walls etc.)
@@ -57,6 +60,9 @@ Cfg.strings = {
 
     showMap         = "Show Minimap",
     showMapDesc     = "Toggle minimap on/off",
+
+    attachCam       = "Camera attached to player",
+    attachCamDesc   = "Should the camera be attached to the player?"
 }
 
 -- list of available filters ( https://pastebin.com/kVPwMemE )

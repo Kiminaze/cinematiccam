@@ -20,6 +20,9 @@ local itemCamPrecision = 1.0
 local currFilter = 1
 local currFilterIntensity = 10
 
+local isAttached = true
+local camCoords
+
 -- menu variables
 local _menuPool = NativeUI.CreatePool()
 local camMenu
@@ -119,17 +122,22 @@ function GenerateCamMenu()
     
     local itemShowMap = NativeUI.CreateCheckboxItem(Cfg.strings.showMap, not IsRadarHidden(), Cfg.strings.showMapDesc)
     camMenu:AddItem(itemShowMap)
+
+    local itemAttachCam = NativeUI.CreateCheckboxItem(Cfg.strings.attachCam, isAttached, "")
+    if (Cfg.detachOption) then
+        camMenu:AddItem(itemAttachCam)
+    end
     
 
     itemToggleCam.CheckboxEvent = function(menu, item, checked)
         if (checked) then
             StartFreeCam(itemCamFov.Items[itemCamFov._Index])
-            camMenu.Items[2]:SetLeftBadge(0)
-            camMenu.Items[3]:SetLeftBadge(0)
+            itemMoveCam:SetLeftBadge(0)
+            itemRotCam:SetLeftBadge(0)
         else
             EndFreeCam()
-            camMenu.Items[2]:SetLeftBadge(21)
-            camMenu.Items[3]:SetLeftBadge(21)
+            itemMoveCam:SetLeftBadge(21)
+            itemRotCam:SetLeftBadge(21)
         end
     end
 
@@ -141,6 +149,24 @@ function GenerateCamMenu()
 
     itemShowMap.CheckboxEvent = function(menu, item, checked)
         DisplayRadar(checked)
+    end
+
+    if (Cfg.detachOption) then
+        itemAttachCam.CheckboxEvent = function(menu, item, checked)
+            if (checked) then
+                local playerPed = GetPlayerPed(-1)
+                local coords    = GetEntityCoords(playerPed)
+                local rot       = GetEntityRotation(playerPed)
+                SetCamCoord(cam, coords)
+                SetCamRot(cam, rot)
+                Citizen.Wait(1)
+                AttachCamToEntity(cam, playerPed, 0.0, 0.0, 0.0, true)
+            else
+                DetachCam(cam)
+            end
+
+            isAttached = checked
+        end
     end
 
 
@@ -185,7 +211,9 @@ function StartFreeCam(fov)
     SetCamActive(cam, true)
     RenderScriptCams(true, false, 0, true, false)
 
-    AttachCamToEntity(cam, playerPed, 0.0, 0.0, 0.0, true)
+    if (isAttached) then
+        AttachCamToEntity(cam, playerPed, 0.0, 0.0, 0.0, true)
+    end
 end
 
 -- destroy camera
@@ -216,71 +244,133 @@ function ProcessCamControls()
         end
 
         -- calculate coord and rotation offset of cam
-        local offsetCoords = GetOffsetFromEntityGivenWorldCoords(playerPed, GetCamCoord(cam))
-        local x = offsetCoords.x
-        local y = offsetCoords.y
-        local z = offsetCoords.z
-        
-        if (IsDisabledControlPressed(1, 32)) then -- W
-            if (camMenu:CurrentSelection() == 2) then
-                y = y + (0.1 * itemCamPrecision.Items[itemCamPrecision._Index])
-            elseif (camMenu:CurrentSelection() == 3) then
-                offsetRotX = offsetRotX - (1.0 * itemCamPrecision.Items[itemCamPrecision._Index])
+        if (isAttached) then
+            local offsetCoords = GetOffsetFromEntityGivenWorldCoords(playerPed, GetCamCoord(cam))
+            local x = offsetCoords.x
+            local y = offsetCoords.y
+            local z = offsetCoords.z
+            
+            if (IsDisabledControlPressed(1, 32)) then -- W
+                if (camMenu:CurrentSelection() == 2) then
+                    y = y + (0.1 * itemCamPrecision.Items[itemCamPrecision._Index])
+                elseif (camMenu:CurrentSelection() == 3) then
+                    offsetRotX = offsetRotX - (1.0 * itemCamPrecision.Items[itemCamPrecision._Index])
+                end
             end
-        end
-        if (IsDisabledControlPressed(1, 33)) then -- S
-            if (camMenu:CurrentSelection() == 2) then
-                y = y - (0.1 * itemCamPrecision.Items[itemCamPrecision._Index])
-            elseif (camMenu:CurrentSelection() == 3) then
-                offsetRotX = offsetRotX + (1.0 * itemCamPrecision.Items[itemCamPrecision._Index])
+            if (IsDisabledControlPressed(1, 33)) then -- S
+                if (camMenu:CurrentSelection() == 2) then
+                    y = y - (0.1 * itemCamPrecision.Items[itemCamPrecision._Index])
+                elseif (camMenu:CurrentSelection() == 3) then
+                    offsetRotX = offsetRotX + (1.0 * itemCamPrecision.Items[itemCamPrecision._Index])
+                end
             end
-        end
-        if (IsDisabledControlPressed(1, 34)) then -- A
-            if (camMenu:CurrentSelection() == 2) then
-                x = x - (0.1 * itemCamPrecision.Items[itemCamPrecision._Index])
-            elseif (camMenu:CurrentSelection() == 3) then
-                offsetRotZ = offsetRotZ + (1.0 * itemCamPrecision.Items[itemCamPrecision._Index])
+            if (IsDisabledControlPressed(1, 34)) then -- A
+                if (camMenu:CurrentSelection() == 2) then
+                    x = x - (0.1 * itemCamPrecision.Items[itemCamPrecision._Index])
+                elseif (camMenu:CurrentSelection() == 3) then
+                    offsetRotZ = offsetRotZ + (1.0 * itemCamPrecision.Items[itemCamPrecision._Index])
+                end
             end
-        end
-        if (IsDisabledControlPressed(1, 35)) then -- D
-            if (camMenu:CurrentSelection() == 2) then
-                x = x + (0.1 * itemCamPrecision.Items[itemCamPrecision._Index])
-            elseif (camMenu:CurrentSelection() == 3) then
-                offsetRotZ = offsetRotZ - (1.0 * itemCamPrecision.Items[itemCamPrecision._Index])
+            if (IsDisabledControlPressed(1, 35)) then -- D
+                if (camMenu:CurrentSelection() == 2) then
+                    x = x + (0.1 * itemCamPrecision.Items[itemCamPrecision._Index])
+                elseif (camMenu:CurrentSelection() == 3) then
+                    offsetRotZ = offsetRotZ - (1.0 * itemCamPrecision.Items[itemCamPrecision._Index])
+                end
             end
-        end
-        if (IsDisabledControlPressed(1, 21)) then -- SHIFT
-            if (camMenu:CurrentSelection() == 2) then
-                z = z + (0.1 * itemCamPrecision.Items[itemCamPrecision._Index])
+            if (IsDisabledControlPressed(1, 21)) then -- SHIFT
+                if (camMenu:CurrentSelection() == 2) then
+                    z = z + (0.1 * itemCamPrecision.Items[itemCamPrecision._Index])
+                end
             end
-        end
-        if (IsDisabledControlPressed(1, 36)) then -- LEFT CTRL
-            if (camMenu:CurrentSelection() == 2) then
-                z = z - (0.1 * itemCamPrecision.Items[itemCamPrecision._Index])
+            if (IsDisabledControlPressed(1, 36)) then -- LEFT CTRL
+                if (camMenu:CurrentSelection() == 2) then
+                    z = z - (0.1 * itemCamPrecision.Items[itemCamPrecision._Index])
+                end
             end
-        end
-        if (IsDisabledControlPressed(1, 44)) then -- Q
-            if (camMenu:CurrentSelection() == 3) then
-                offsetRotY = offsetRotY - (1.0 * itemCamPrecision.Items[itemCamPrecision._Index])
+            if (IsDisabledControlPressed(1, 44)) then -- Q
+                if (camMenu:CurrentSelection() == 3) then
+                    offsetRotY = offsetRotY - (1.0 * itemCamPrecision.Items[itemCamPrecision._Index])
+                end
             end
-        end
-        if (IsDisabledControlPressed(1, 38)) then -- E
-            if (camMenu:CurrentSelection() == 3) then
-                offsetRotY = offsetRotY + (1.0 * itemCamPrecision.Items[itemCamPrecision._Index])
+            if (IsDisabledControlPressed(1, 38)) then -- E
+                if (camMenu:CurrentSelection() == 3) then
+                    offsetRotY = offsetRotY + (1.0 * itemCamPrecision.Items[itemCamPrecision._Index])
+                end
             end
-        end
     
-        -- set coords of cam
-        AttachCamToEntity(cam, playerPed, x, y, z, true)
+            -- set coords of cam
+            AttachCamToEntity(cam, playerPed, x, y, z, true)
 
-        -- reset coords of cam if too far from player
-        if (Vdist(0.0, 0.0, 0.0, x, y, z) > Cfg.maxDistance) then
-            AttachCamToEntity(cam, playerPed, offsetCoords.x, offsetCoords.y, offsetCoords.z, true)
+            -- reset coords of cam if too far from player
+            if (Vdist(0.0, 0.0, 0.0, x, y, z) > Cfg.maxDistance) then
+                AttachCamToEntity(cam, playerPed, offsetCoords.x, offsetCoords.y, offsetCoords.z, true)
+            end
+        else
+            local camCoords = GetCamCoord(cam)
+            local x = camCoords.x
+            local y = camCoords.y
+            local z = camCoords.z
+            
+            if (IsDisabledControlPressed(1, 32)) then -- W
+                if (camMenu:CurrentSelection() == 2) then
+                    y = y + (0.1 * itemCamPrecision.Items[itemCamPrecision._Index])
+                elseif (camMenu:CurrentSelection() == 3) then
+                    offsetRotX = offsetRotX - (1.0 * itemCamPrecision.Items[itemCamPrecision._Index])
+                end
+            end
+            if (IsDisabledControlPressed(1, 33)) then -- S
+                if (camMenu:CurrentSelection() == 2) then
+                    y = y - (0.1 * itemCamPrecision.Items[itemCamPrecision._Index])
+                elseif (camMenu:CurrentSelection() == 3) then
+                    offsetRotX = offsetRotX + (1.0 * itemCamPrecision.Items[itemCamPrecision._Index])
+                end
+            end
+            if (IsDisabledControlPressed(1, 34)) then -- A
+                if (camMenu:CurrentSelection() == 2) then
+                    x = x - (0.1 * itemCamPrecision.Items[itemCamPrecision._Index])
+                elseif (camMenu:CurrentSelection() == 3) then
+                    offsetRotZ = offsetRotZ + (1.0 * itemCamPrecision.Items[itemCamPrecision._Index])
+                end
+            end
+            if (IsDisabledControlPressed(1, 35)) then -- D
+                if (camMenu:CurrentSelection() == 2) then
+                    x = x + (0.1 * itemCamPrecision.Items[itemCamPrecision._Index])
+                elseif (camMenu:CurrentSelection() == 3) then
+                    offsetRotZ = offsetRotZ - (1.0 * itemCamPrecision.Items[itemCamPrecision._Index])
+                end
+            end
+            if (IsDisabledControlPressed(1, 21)) then -- SHIFT
+                if (camMenu:CurrentSelection() == 2) then
+                    z = z + (0.1 * itemCamPrecision.Items[itemCamPrecision._Index])
+                end
+            end
+            if (IsDisabledControlPressed(1, 36)) then -- LEFT CTRL
+                if (camMenu:CurrentSelection() == 2) then
+                    z = z - (0.1 * itemCamPrecision.Items[itemCamPrecision._Index])
+                end
+            end
+            if (IsDisabledControlPressed(1, 44)) then -- Q
+                if (camMenu:CurrentSelection() == 3) then
+                    offsetRotY = offsetRotY - (1.0 * itemCamPrecision.Items[itemCamPrecision._Index])
+                end
+            end
+            if (IsDisabledControlPressed(1, 38)) then -- E
+                if (camMenu:CurrentSelection() == 3) then
+                    offsetRotY = offsetRotY + (1.0 * itemCamPrecision.Items[itemCamPrecision._Index])
+                end
+            end
+            
+            SetCamCoord(cam, x, y, z)
         end
     end
     
     -- set rotation of cam
-    SetCamRot(cam, rotX+offsetRotX, rotY+offsetRotY, rotZ+offsetRotZ, 2)
+    if (isAttached) then
+        SetCamRot(cam, rotX+offsetRotX, rotY+offsetRotY, rotZ+offsetRotZ, 2)
+    else
+        SetCamRot(cam, offsetRotX, offsetRotY, offsetRotZ, 2)
+    end
 end
 
 
