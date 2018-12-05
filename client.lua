@@ -361,6 +361,7 @@ function ProcessCamControls()
                 end
             end
             
+            SetFocusArea(x, y, z, 0.0, 0.0, 0.0)
             SetCamCoord(cam, x, y, z)
         end
     end
