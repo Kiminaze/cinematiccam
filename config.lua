@@ -21,7 +21,7 @@ Cfg.detachOption = true
 -- default: 5.0
 -- used to prevent e.g. Meta-Gaming and Bug-Abuse (looking through walls etc.)
 -- with 10,000 you can basically fly above the whole map from the middle but keep in mind, that LoD-states (Level of Detail) won't change as your character stays at its position
-Cfg.maxDistance = 500.0
+Cfg.maxDistance = 5.0
 
 -- min and max FoV settings (should always be in between 1.0f and 130.0f!)
 Cfg.minFov = 1.0
