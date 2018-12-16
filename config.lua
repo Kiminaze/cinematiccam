@@ -21,7 +21,7 @@ Cfg.detachOption = true
 -- default: 5.0
 -- used to prevent e.g. Meta-Gaming and Bug-Abuse (looking through walls etc.)
 -- with 10,000 you can basically fly above the whole map from the middle but keep in mind, that LoD-states (Level of Detail) won't change as your character stays at its position
-Cfg.maxDistance = 5.0
+Cfg.maxDistance = 500.0
 
 -- min and max FoV settings (should always be in between 1.0f and 130.0f!)
 Cfg.minFov = 1.0
@@ -36,12 +36,6 @@ Cfg.strings = {
 
     toggleCam       = "Camera active",
     toggleCamDesc   = "Toggle camera on/off",
-
-    moveCam         = "Move camera",
-    moveCamDesc     = "Press WASD, Shift and Ctrl to move the camera",
-
-    rotCam          = "Rotate camera",
-    rotCamDesc      = "Press WASD, Q and E to rotate the camera",
 
     precision       = "Camera Precision",
     precisionDesc   = "Change camera precision movement",
@@ -62,7 +56,11 @@ Cfg.strings = {
     showMapDesc     = "Toggle minimap on/off",
 
     attachCam       = "Camera attached to player",
-    attachCamDesc   = "Should the camera be attached to the player?"
+    attachCamDesc   = "Should the camera be attached to the player?",
+
+    ctrlHelpRoll    = "Roll Left/Right",
+    ctrlHelpMove    = "Movement",
+    ctrlHelpRotate  = "Rotate"
 }
 
 -- list of available filters ( https://pastebin.com/kVPwMemE )
@@ -329,7 +327,7 @@ Cfg.filterList = {
     "KT_underpass", 
     "lab_none", 
     "lab_none_dark", 
-    "lab_none_dark_fog", 
+    "lab_none_dark_fog",
     "lab_none_dark_OVR", 
     "lab_none_exit", 
     "lab_none_exit_OVR", 
@@ -800,21 +798,18 @@ Cfg.filterList = {
     "yell_tunnel_nodirect", 
 }
 
--- filter intensities
-Cfg.filterInten = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0}
-
 -- disables character/vehicle controls when using camera movements
 Cfg.disabledControls = {
-    30, -- A and D (Character Movement)
-    31, -- W and S (Character Movement)
-    21, -- LEFT SHIFT
-    36, -- LEFT CTRL
-    44, -- Q
-    38, -- E
-    71, -- W (Vehicle Movement)
-    72, -- S (Vehicle Movement)
-    59, -- A and D (Vehicle Movement)
-    60, -- LEFT SHIFT and LEFT CTRL (Vehicle Movement)
-    85, -- Q (Radio Wheel)
-    86, -- E (Vehicle Horn)
+    30,     -- A and D (Character Movement)
+    31,     -- W and S (Character Movement)
+    21,     -- LEFT SHIFT
+    36,     -- LEFT CTRL
+    44,     -- Q
+    38,     -- E
+    71,     -- W (Vehicle Movement)
+    72,     -- S (Vehicle Movement)
+    59,     -- A and D (Vehicle Movement)
+    60,     -- LEFT SHIFT and LEFT CTRL (Vehicle Movement)
+    85,     -- Q (Radio Wheel)
+    86,     -- E (Vehicle Horn)
 }
