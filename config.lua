@@ -1,17 +1,15 @@
 --------------------------------------------------
-------- FREECAM FOR FIVEM MADE BY KIMINAZE -------
+---- CINEMATIC CAM FOR FIVEM MADE BY KIMINAZE ----
 --------------------------------------------------
 
 Cfg = {}
 
 -- specify, if menu should be accessible via button press
 Cfg.useButton = true
--- default: 178 (DELETE)
-Cfg.button = 178
 
 -- specify, if menu should be accessible via chat command
 Cfg.useCommand = true
--- specify command string
+-- specify chat command string
 Cfg.command = "freecam"
 
 -- Show an extra option to have a completely free to move camera
@@ -21,7 +19,17 @@ Cfg.detachOption = true
 -- default: 5.0
 -- used to prevent e.g. Meta-Gaming and Bug-Abuse (looking through walls etc.)
 -- with 10,000 you can basically fly above the whole map from the middle but keep in mind, that LoD-states (Level of Detail) won't change as your character stays at its position
-Cfg.maxDistance = 5.0
+-- this is not used when the camera is detached
+Cfg.maxDistance = 5000.0
+
+-- min and max speed settings for movement in m/s including increments (should always be above 0.0)
+Cfg.minSpeed    = 0.1
+Cfg.maxSpeed    = 10.0
+
+-- min and max precision settings for rotation including increments (should always be above 0.0)
+Cfg.minPrecision    = 0.1
+Cfg.incrPrecision   = 0.1
+Cfg.maxPrecision    = 2.0
 
 -- min and max FoV settings (should always be in between 1.0f and 130.0f!)
 Cfg.minFov = 1.0
@@ -40,6 +48,9 @@ Cfg.strings = {
     precision       = "Camera Precision",
     precisionDesc   = "Change camera precision movement",
 
+    speed           = "Camera Speed",
+    speedDesc       = "Change camera movement speed",
+
     camFov          = "Camera Field of View",
     camFovDesc      = "Change camera Field of View",
 
@@ -55,12 +66,65 @@ Cfg.strings = {
     showMap         = "Show Minimap",
     showMapDesc     = "Toggle minimap on/off",
 
-    attachCam       = "Camera attached to player",
-    attachCamDesc   = "Should the camera be attached to the player?",
+    attachCam       = "Attach camera to: ",
+    attachCamDesc   = "Attach the camera to an entity in front of it",
 
     ctrlHelpRoll    = "Roll Left/Right",
     ctrlHelpMove    = "Movement",
     ctrlHelpRotate  = "Rotate"
+}
+
+Cfg.controls = {
+    keyboard = {
+        openMenu    = 178,  -- Delete
+        hold        = 21,   -- Shift
+        speedUp     = 15,   -- Mouse wheel up   -- with hold
+        speedDown   = 14,   -- Mouse wheel down -- with hold
+
+        zoomOut     = 14,   -- Mouse wheel down
+        zoomIn      = 15,   -- Mouse wheel up
+
+        forwards    = 32,   -- W
+        backwards   = 33,   -- S
+        left        = 34,   -- A
+        right       = 35,   -- D
+        up          = 22,   -- Space
+        down        = 36,   -- Ctrl
+
+        rollLeft    = 44,   -- Q
+        rollRight   = 38,   -- E
+    },
+    controller = {
+        openMenu    = 244,  -- Select -- hold for ~1 second
+
+        hold        = 80,   -- O / B
+        up          = 172,  -- D-pad up
+        down        = 173,  -- D-pad down
+
+        rollLeft    = 37,   -- L1 / LB
+        rollRight   = 44,   -- R1 / RB
+    }
+}
+
+-- disables character/vehicle controls when using camera movements
+Cfg.disabledControls = {
+    30,     -- A and D (Character Movement)
+    31,     -- W and S (Character Movement)
+    21,     -- LEFT SHIFT
+    36,     -- LEFT CTRL
+    22,     -- SPACE
+    44,     -- Q
+    38,     -- E
+    71,     -- W (Vehicle Movement)
+    72,     -- S (Vehicle Movement)
+    59,     -- A and D (Vehicle Movement)
+    60,     -- LEFT SHIFT and LEFT CTRL (Vehicle Movement)
+    85,     -- Q (Radio Wheel)
+    86,     -- E (Vehicle Horn)
+    15,     -- Mouse wheel up
+    14,     -- Mouse wheel down
+    37,     -- Controller R1 (PS) / RT (XBOX)
+    80,     -- Controller O (PS) / B (XBOX)
 }
 
 -- list of available filters ( https://pastebin.com/kVPwMemE )
@@ -796,20 +860,4 @@ Cfg.filterList = {
     "winning_room", 
     "yacht_DLC", 
     "yell_tunnel_nodirect", 
-}
-
--- disables character/vehicle controls when using camera movements
-Cfg.disabledControls = {
-    30,     -- A and D (Character Movement)
-    31,     -- W and S (Character Movement)
-    21,     -- LEFT SHIFT
-    36,     -- LEFT CTRL
-    44,     -- Q
-    38,     -- E
-    71,     -- W (Vehicle Movement)
-    72,     -- S (Vehicle Movement)
-    59,     -- A and D (Vehicle Movement)
-    60,     -- LEFT SHIFT and LEFT CTRL (Vehicle Movement)
-    85,     -- Q (Radio Wheel)
-    86,     -- E (Vehicle Horn)
 }
