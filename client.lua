@@ -13,6 +13,11 @@ local offsetRotX = 0.0
 local offsetRotY = 0.0
 local offsetRotZ = 0.0
 
+local offsetCoords = {}
+offsetCoords.x = 0.0
+offsetCoords.y = 0.0
+offsetCoords.z = 0.0
+
 local counter = 0
 local precision = 1.0
 local currPrecisionIndex
@@ -32,9 +37,13 @@ local currFilterIntensity = 10
 local filterInten = {}
 for i=0.1, 2.01, 0.1 do table.insert(filterInten, tostring(i)) end
 
+local freeFly = false
+
 local isAttached = false
 local entity
 local camCoords
+
+local pointEntity = false
 
 -- menu variables
 local _menuPool = NativeUI.CreatePool()
@@ -46,6 +55,8 @@ local itemFilter
 local itemFilterIntensity
 
 local itemAttachCam
+
+local itemPointEntity
 
 -- print error if no menu access was specified
 if (not(Cfg.useButton or Cfg.useCommand)) then
@@ -73,12 +84,12 @@ Citizen.CreateThread(function()
 
         -- open / close menu on button press
         if (Cfg.useButton) then
-            if (IsControlPressed(1, Cfg.controls.controller.openMenu)) then
+            if (IsDisabledControlPressed(1, Cfg.controls.controller.openMenu)) then
                 pressedCount = pressedCount + 1 
-            elseif (IsControlJustReleased(1, Cfg.controls.controller.openMenu)) then
+            elseif (IsDisabledControlJustReleased(1, Cfg.controls.controller.openMenu)) then
                 pressedCount = 0
             end
-            if (IsControlJustReleased(1, Cfg.controls.keyboard.openMenu) or pressedCount >= 60) then
+            if (IsDisabledControlJustReleased(1, Cfg.controls.keyboard.openMenu) or pressedCount >= 60) then
                 if (pressedCount >= 60) then pressedCount = 0 end
                 if (camMenu:Visible()) then
                     camMenu:Visible(false)
@@ -112,7 +123,11 @@ Citizen.CreateThread(function()
             itemAttachCam:RightLabel(txt)
 
             if (isAttached and not DoesEntityExist(entity)) then
+                isAttached = false
+
                 ClearFocus()
+
+                StopCamPointing(cam)
             end
         end
     end
@@ -132,14 +147,14 @@ function GenerateCamMenu()
     _menuPool:Add(camMenu)
     
     -- add additional control help
-    camMenu:AddInstructionButton({GetControlInstructionalButton(1, 38, true), ""})
-    camMenu:AddInstructionButton({GetControlInstructionalButton(1, 44, true), Cfg.strings.ctrlHelpRoll})
-    camMenu:AddInstructionButton({GetControlInstructionalButton(1, 36, true), ""})
-    camMenu:AddInstructionButton({GetControlInstructionalButton(1, 21, true), ""})
-    camMenu:AddInstructionButton({GetControlInstructionalButton(1, 30, true), ""})
-    camMenu:AddInstructionButton({GetControlInstructionalButton(1, 31, true), Cfg.strings.ctrlHelpMove})
-    camMenu:AddInstructionButton({GetControlInstructionalButton(1, 2, true), ""})
-    camMenu:AddInstructionButton({GetControlInstructionalButton(1, 1, true), Cfg.strings.ctrlHelpRotate})
+    --camMenu:AddInstructionButton({GetControlInstructionalButton(1, 38, true), ""})
+    --camMenu:AddInstructionButton({GetControlInstructionalButton(1, 44, true), Cfg.strings.ctrlHelpRoll})
+    --camMenu:AddInstructionButton({GetControlInstructionalButton(1, 36, true), ""})
+    --camMenu:AddInstructionButton({GetControlInstructionalButton(1, 21, true), ""})
+    --camMenu:AddInstructionButton({GetControlInstructionalButton(1, 30, true), ""})
+    --camMenu:AddInstructionButton({GetControlInstructionalButton(1, 31, true), Cfg.strings.ctrlHelpMove})
+    --camMenu:AddInstructionButton({GetControlInstructionalButton(1, 2, true), ""})
+    --camMenu:AddInstructionButton({GetControlInstructionalButton(1, 1, true), Cfg.strings.ctrlHelpRotate})
 
     local itemToggleCam = NativeUI.CreateCheckboxItem(Cfg.strings.toggleCam, DoesCamExist(cam), Cfg.strings.toggleCamDesc)
     camMenu:AddItem(itemToggleCam)
@@ -159,10 +174,14 @@ function GenerateCamMenu()
     local itemShowMap = NativeUI.CreateCheckboxItem(Cfg.strings.showMap, not IsRadarHidden(), Cfg.strings.showMapDesc)
     camMenu:AddItem(itemShowMap)
 
-    itemAttachCam = NativeUI.CreateItem(Cfg.strings.attachCam, "")
-    if (Cfg.detachOption) then
-        camMenu:AddItem(itemAttachCam)
-    end
+    local itemToggleFreeFlyMode = NativeUI.CreateCheckboxItem(Cfg.strings.freeFly, freeFly, Cfg.strings.freeFlyDesc)
+    camMenu:AddItem(itemToggleFreeFlyMode)
+
+    itemAttachCam = NativeUI.CreateItem(Cfg.strings.attachCam, Cfg.strings.attachCamDesc)
+    camMenu:AddItem(itemAttachCam)
+
+    --itemPointEntity = NativeUI.CreateCheckboxItem(Cfg.strings.pointEntity, pointEntity, Cfg.strings.pointEntityDesc)
+    --camMenu:AddItem(itemPointEntity)
     
 
     itemToggleCam.CheckboxEvent = function(menu, item, checked)
@@ -170,21 +189,26 @@ function GenerateCamMenu()
     end
 
     itemCamPrecision.OnListChanged = function(menu, item, newindex)
-        precision           = itemCamPrecision.Items[newindex]
-        currPrecisionIndex  = newindex
+        ChangePrecision(newindex)
     end
 
     itemShowMap.CheckboxEvent = function(menu, item, checked)
         ToggleUI(checked)
     end
 
-    if (Cfg.detachOption) then
-        camMenu.OnItemSelect = function(menu, item, index)
-            if (item == itemAttachCam) then
-                ToggleAttachMode()
-            end
+    itemToggleFreeFlyMode.CheckboxEvent = function(menu, item, checked)
+        ToggleFreeFlyMode(checked)
+    end
+
+    camMenu.OnItemSelect = function(menu, item, index)
+        if (item == itemAttachCam) then
+            ToggleAttachMode()
         end
     end
+
+    --[[itemPointEntity.CheckboxEvent = function(menu, item, checked)
+        TogglePointing(checked)
+    end]]
 
     itemFilter.OnListChanged = function(menu, item, newindex)
         ApplyFilter(newindex)
@@ -227,7 +251,9 @@ function StartFreeCam(fov)
     SetCamAffectsAiming(cam, false)
 
     if (isAttached and DoesEntityExist(entity)) then
-        AttachCamToEntity(cam, entity, 0.0, 0.0, 0.0, true)
+        offsetCoords = GetOffsetFromEntityGivenWorldCoords(entity, GetCamCoord(cam))
+
+        AttachCamToEntity(cam, entity, offsetCoords.x, offsetCoords.y, offsetCoords.z, true)
     end
 end
 
@@ -242,9 +268,11 @@ function EndFreeCam()
     offsetRotY = 0.0
     offsetRotZ = 0.0
 
-    speed = 1.0
+    isAttached = false
 
-    currFov = GetGameplayCamFov()
+    speed       = 1.0
+    precision   = 1.0
+    currFov     = GetGameplayCamFov()
 
     cam = nil
 end
@@ -255,12 +283,113 @@ function ProcessCamControls()
 
     -- disable 1st person as the 1st person camera can cause some glitches
     DisableFirstPersonCamThisFrame()
-
     -- block weapon wheel (reason: scrolling)
     BlockWeaponWheelThisFrame()
+    -- disable character/vehicle controls
+    for k, v in pairs(Cfg.disabledControls) do
+        DisableControlAction(0, v, true)
+    end
+
+    if (isAttached) then
+        -- calculate new position
+        offsetCoords = ProcessNewPosition(offsetCoords.x, offsetCoords.y, offsetCoords.z)
+        
+        -- focus entity
+        SetFocusEntity(entity)
+
+        -- set coords
+        AttachCamToEntity(cam, entity, offsetCoords.x, offsetCoords.y, offsetCoords.z, true)
+
+        -- reset coords of cam if too far from entity
+        if (Vdist(0.0, 0.0, 0.0, offsetCoords.x, offsetCoords.y, offsetCoords.z) > Cfg.maxDistance) then
+            AttachCamToEntity(cam, entity, offsetCoords.x, offsetCoords.y, offsetCoords.z, true)
+        end
+        
+        -- set rotation
+        local entityRot = GetEntityRotation(entity, 2)
+        SetCamRot(cam, entityRot.x + offsetRotX, entityRot.y + offsetRotY, entityRot.z + offsetRotZ, 2)
+    else
+        local camCoords = GetCamCoord(cam)
+
+        -- calculate new position
+        local newPos = ProcessNewPosition(camCoords.x, camCoords.y, camCoords.z)
+
+        -- focus cam area
+        SetFocusArea(newPos.x, newPos.y, newPos.z, 0.0, 0.0, 0.0)
+        
+        -- set coords of cam
+        SetCamCoord(cam, newPos.x, newPos.y, newPos.z)
+        
+        -- set rotation
+        SetCamRot(cam, offsetRotX, offsetRotY, offsetRotZ, 2)
+    end
+end
+
+function ProcessNewPosition(x, y, z)
+    local _x = x
+    local _y = y
+    local _z = z
+
+--gegenkathete = z
+--ankathete = y
+--hypotenuse = 1
+--alpha = GetCamRot(cam).x
 
     -- keyboard
     if (IsInputDisabled(0)) then
+        if (IsDisabledControlPressed(1, Cfg.controls.keyboard.forwards)) then
+            local multX = Sin(offsetRotZ)
+            local multY = Cos(offsetRotZ)
+            local multZ = Sin(offsetRotX)
+
+            _x = _x - (0.1 * speed * multX)
+            _y = _y + (0.1 * speed * multY)
+            if (freeFly) then
+                _z = _z + (0.1 * speed * multZ)
+            end
+        end
+        if (IsDisabledControlPressed(1, Cfg.controls.keyboard.backwards)) then
+            local multX = Sin(offsetRotZ)
+            local multY = Cos(offsetRotZ)
+            local multZ = Sin(offsetRotX)
+
+            _x = _x + (0.1 * speed * multX)
+            _y = _y - (0.1 * speed * multY)
+            if (freeFly) then
+                _z = _z - (0.1 * speed * multZ)
+            end
+        end
+        if (IsDisabledControlPressed(1, Cfg.controls.keyboard.left)) then
+            local multX = Sin(offsetRotZ + 90.0)
+            local multY = Cos(offsetRotZ + 90.0)
+            local multZ = Sin(offsetRotY)
+
+            _x = _x - (0.1 * speed * multX)
+            _y = _y + (0.1 * speed * multY)
+            if (freeFly) then
+                _z = _z + (0.1 * speed * multZ)
+            end
+        end
+        if (IsDisabledControlPressed(1, Cfg.controls.keyboard.right)) then
+            local multX = Sin(offsetRotZ + 90.0)
+            local multY = Cos(offsetRotZ + 90.0)
+            local multZ = Sin(offsetRotY)
+
+            _x = _x + (0.1 * speed * multX)
+            _y = _y - (0.1 * speed * multY)
+            if (freeFly) then
+                _z = _z - (0.1 * speed * multZ)
+            end
+        end
+        
+        if (IsDisabledControlPressed(1, Cfg.controls.keyboard.up)) then
+            _z = _z + (0.1 * speed)
+        end
+        if (IsDisabledControlPressed(1, Cfg.controls.keyboard.down)) then
+            _z = _z - (0.1 * speed)
+        end
+        
+
         if (IsDisabledControlPressed(1, Cfg.controls.keyboard.hold)) then
             -- hotkeys for speed
             if (IsDisabledControlPressed(1, Cfg.controls.keyboard.speedUp)) then
@@ -284,153 +413,93 @@ function ProcessCamControls()
                 ChangeFov(-1.0)
             end
         end
+        
+        -- rotation
+        offsetRotX = offsetRotX - (GetDisabledControlNormal(1, 2) * precision * 8.0)
+        offsetRotZ = offsetRotZ - (GetDisabledControlNormal(1, 1) * precision * 8.0)
+        if (IsDisabledControlPressed(1, Cfg.controls.keyboard.rollLeft)) then
+            offsetRotY = offsetRotY - precision
+        end
+        if (IsDisabledControlPressed(1, Cfg.controls.keyboard.rollRight)) then
+            offsetRotY = offsetRotY + precision
+        end
+
+    -- controller
     else
+        local multX = Sin(offsetRotZ)
+        local multY = Cos(offsetRotZ)
+        local multZ = Sin(offsetRotX)
+        _x = _x - (0.1 * speed * multX * GetDisabledControlNormal(1, 32))
+        _y = _y + (0.1 * speed * multY * GetDisabledControlNormal(1, 32))
+        if (freeFly) then
+            _z = _z + (0.1 * speed * multZ * GetDisabledControlNormal(1, 32))
+        end
+        
+        _x = _x + (0.1 * speed * multX * GetDisabledControlNormal(1, 33))
+        _y = _y - (0.1 * speed * multY * GetDisabledControlNormal(1, 33))
+        if (freeFly) then
+            _z = _z - (0.1 * speed * multZ * GetDisabledControlNormal(1, 33))
+        end
+        
+        multX = Sin(offsetRotZ + 90.0)
+        multY = Cos(offsetRotZ + 90.0)
+        local multZ = Sin(offsetRotY)
+        _x = _x - (0.1 * speed * multX * GetDisabledControlNormal(1, 34))
+        _y = _y + (0.1 * speed * multY * GetDisabledControlNormal(1, 34))
+        if (freeFly) then
+            _z = _z + (0.1 * speed * multZ * GetDisabledControlNormal(1, 34))
+        end
+        
+        _x = _x + (0.1 * speed * multX * GetDisabledControlNormal(1, 35))
+        _y = _y - (0.1 * speed * multY * GetDisabledControlNormal(1, 35))
+        if (freeFly) then
+            _z = _z - (0.1 * speed * multZ * GetDisabledControlNormal(1, 35))
+        end
+
+        -- FoV, Speed, Up/Down Movement
         if (GetDisabledControlNormal(1, 228) ~= 0.0) then
-            if (not IsDisabledControlPressed(1, Cfg.controls.controller.hold)) then
+            if (IsDisabledControlPressed(1, Cfg.controls.controller.holdFov)) then
                 ChangeFov(GetDisabledControlNormal(1, 228))
-            else
+            elseif (IsDisabledControlPressed(1, Cfg.controls.controller.holdSpeed)) then
                 local newSpeed = speed - (0.1 * GetDisabledControlNormal(1, 228))
                 if (newSpeed > Cfg.minSpeed) then
                     speed = newSpeed
                 else
                     speed = Cfg.minSpeed
                 end
+            else
+                _z = _z - (0.1 * speed * GetDisabledControlNormal(1, 228))
             end
         end
         if (GetDisabledControlNormal(1, 229) ~= 0.0) then
-            if (not IsDisabledControlPressed(1, Cfg.controls.controller.hold)) then
+            if (IsDisabledControlPressed(1, Cfg.controls.controller.holdFov)) then
                 ChangeFov(- GetDisabledControlNormal(1, 229))
-            else
+            elseif (IsDisabledControlPressed(1, Cfg.controls.controller.holdSpeed)) then
                 local newSpeed = speed + (0.1 * GetDisabledControlNormal(1, 229))
                 if (newSpeed < Cfg.maxSpeed) then
                     speed = newSpeed
                 else
                     speed = Cfg.maxSpeed
                 end
+            else
+                _z = _z + (0.1 * speed * GetDisabledControlNormal(1, 229))
             end
         end
-    end
-
-    -- control anything related to the menu being open
-    if (_menuPool:IsAnyMenuOpen() or not isAttached) then
-        -- disable character/vehicle controls
-        for k, v in pairs(Cfg.disabledControls) do
-            DisableControlAction(0, v, true)
-        end
-
-        -- camera rotation
-        if (IsInputDisabled(0)) then
-            -- keyboard
-            offsetRotX = offsetRotX - (GetDisabledControlNormal(1, 2) * precision * 8.0)
-            offsetRotZ = offsetRotZ - (GetDisabledControlNormal(1, 1) * precision * 8.0)
-        else
-            -- controller
-            offsetRotX = offsetRotX - (GetDisabledControlNormal(1, 2) * precision)
-            offsetRotZ = offsetRotZ - (GetDisabledControlNormal(1, 1) * precision)
-        end
-        if (offsetRotX > 90.0) then offsetRotX = 90.0 elseif (offsetRotX < -90.0) then offsetRotX = -90.0 end
-        if (offsetRotY > 90.0) then offsetRotY = 90.0 elseif (offsetRotY < -90.0) then offsetRotY = -90.0 end
-        if (offsetRotZ > 360.0) then offsetRotZ = offsetRotZ - 360.0 elseif (offsetRotZ < -360.0) then offsetRotZ = offsetRotZ + 360.0 end
-
-        -- calculate coord and rotation offset of cam
-        if (isAttached) then
-            local offsetCoords = GetOffsetFromEntityGivenWorldCoords(entity, GetCamCoord(cam))
-
-            local newPos = ProcessNewPosition(offsetCoords.x, offsetCoords.y, offsetCoords.z)
-
-            -- set coords of cam
-            AttachCamToEntity(cam, entity, newPos.x, newPos.y, newPos.z, true)
-            
-            SetFocusEntity(entity)
-
-            -- reset coords of cam if too far from entity
-            if (Vdist(0.0, 0.0, 0.0, newPos.x, newPos.y, newPos.z) > Cfg.maxDistance) then
-                AttachCamToEntity(cam, entity, offsetCoords.x, offsetCoords.y, offsetCoords.z, true)
-            end
-        else
-            local camCoords = GetCamCoord(cam)
-
-            local newPos = ProcessNewPosition(camCoords.x, camCoords.y, camCoords.z)
-
-            SetFocusArea(newPos.x, newPos.y, newPos.z, 0.0, 0.0, 0.0)
-            SetCamCoord(cam, newPos.x, newPos.y, newPos.z)
-        end
-    end
-    
-    -- set rotation of cam
-    if (isAttached) then
-        local entityRot = GetEntityRotation(entity, 2)
-        SetCamRot(cam, entityRot.x + offsetRotX, entityRot.y + offsetRotY, entityRot.z + offsetRotZ, 2)
-    else
-        SetCamRot(cam, offsetRotX, offsetRotY, offsetRotZ, 2)
-    end
-end
-
-function ProcessNewPosition(x, y, z)
-    local _x = x
-    local _y = y
-    local _z = z
-
-    -- keyboard
-    if (IsInputDisabled(0)) then
-        if (IsDisabledControlPressed(1, Cfg.controls.keyboard.forwards)) then
-            local multX = Sin(offsetRotZ)
-            local multY = Cos(offsetRotZ)
-
-            _x = _x - (0.1 * speed * multX)
-            _y = _y + (0.1 * speed * multY)
-        end
-        if (IsDisabledControlPressed(1, Cfg.controls.keyboard.backwards)) then
-            local multX = Sin(offsetRotZ)
-            local multY = Cos(offsetRotZ)
-
-            _x = _x + (0.1 * speed * multX)
-            _y = _y - (0.1 * speed * multY)
-        end
-        if (IsDisabledControlPressed(1, Cfg.controls.keyboard.left)) then
-            local multX = Sin(offsetRotZ + 90.0)
-            local multY = Cos(offsetRotZ + 90.0)
-
-            _x = _x - (0.1 * speed * multX)
-            _y = _y + (0.1 * speed * multY)
-        end
-        if (IsDisabledControlPressed(1, Cfg.controls.keyboard.right)) then
-            local multX = Sin(offsetRotZ + 90.0)
-            local multY = Cos(offsetRotZ + 90.0)
-
-            _x = _x + (0.1 * speed * multX)
-            _y = _y - (0.1 * speed * multY)
-        end
-    -- controller
-    else
-        local multX = Sin(offsetRotZ)
-        local multY = Cos(offsetRotZ)
-        _x = _x - (0.1 * speed * multX * GetDisabledControlNormal(1, 32))
-        _y = _y + (0.1 * speed * multY * GetDisabledControlNormal(1, 32))
         
-        _x = _x + (0.1 * speed * multX * GetDisabledControlNormal(1, 33))
-        _y = _y - (0.1 * speed * multY * GetDisabledControlNormal(1, 33))
-        
-        multX = Sin(offsetRotZ + 90.0)
-        multY = Cos(offsetRotZ + 90.0)
-        _x = _x - (0.1 * speed * multX * GetDisabledControlNormal(1, 34))
-        _y = _y + (0.1 * speed * multY * GetDisabledControlNormal(1, 34))
-        
-        _x = _x + (0.1 * speed * multX * GetDisabledControlNormal(1, 35))
-        _y = _y - (0.1 * speed * multY * GetDisabledControlNormal(1, 35))
+        -- rotation
+        offsetRotX = offsetRotX - (GetDisabledControlNormal(1, 2) * precision)
+        offsetRotZ = offsetRotZ - (GetDisabledControlNormal(1, 1) * precision)
+        if (IsDisabledControlPressed(1, Cfg.controls.controller.rollLeft)) then
+            offsetRotY = offsetRotY - precision
+        end
+        if (IsDisabledControlPressed(1, Cfg.controls.controller.rollRight)) then
+            offsetRotY = offsetRotY + precision
+        end
     end
-    if ((IsInputDisabled(0) and IsDisabledControlPressed(1, Cfg.controls.keyboard.up)) or IsDisabledControlPressed(1, Cfg.controls.controller.up)) then
-        _z = _z + (0.1 * speed)
-    end
-    if ((IsInputDisabled(0) and IsDisabledControlPressed(1, Cfg.controls.keyboard.down)) or IsDisabledControlPressed(1, Cfg.controls.controller.down)) then
-        _z = _z - (0.1 * speed)
-    end
-    if ((IsInputDisabled(0) and IsDisabledControlPressed(1, Cfg.controls.keyboard.rollLeft)) or IsDisabledControlPressed(1, Cfg.controls.controller.rollLeft)) then
-        offsetRotY = offsetRotY - precision
-    end
-    if ((IsInputDisabled(0) and IsDisabledControlPressed(1, Cfg.controls.keyboard.rollRight)) or IsDisabledControlPressed(1, Cfg.controls.controller.rollRight)) then
-        offsetRotY = offsetRotY + precision
-    end
+
+    if (offsetRotX > 90.0) then offsetRotX = 90.0 elseif (offsetRotX < -90.0) then offsetRotX = -90.0 end
+    if (offsetRotY > 90.0) then offsetRotY = 90.0 elseif (offsetRotY < -90.0) then offsetRotY = -90.0 end
+    if (offsetRotZ > 360.0) then offsetRotZ = offsetRotZ - 360.0 elseif (offsetRotZ < -360.0) then offsetRotZ = offsetRotZ + 360.0 end
 
     return {x = _x, y = _y, z = _z}
 end
@@ -456,8 +525,17 @@ function ChangeFov(changeFov)
     end
 end
 
+function ChangePrecision(newindex)
+    precision           = itemCamPrecision.Items[newindex]
+    currPrecisionIndex  = newindex
+end
+
 function ToggleUI(flag)
     DisplayRadar(flag)
+end
+
+function ToggleFreeFlyMode(flag)
+    freeFly = flag
 end
 
 function GetEntityInFrontOfCam()
@@ -472,8 +550,10 @@ end
 function ToggleAttachMode()
     if (not isAttached) then
         entity = GetEntityInFrontOfCam()
-
+        
         if (DoesEntityExist(entity)) then
+            offsetCoords = GetOffsetFromEntityGivenWorldCoords(entity, GetCamCoord(cam))
+
             Citizen.Wait(1)
             local camCoords = GetCamCoord(cam)
             AttachCamToEntity(cam, entity, GetOffsetFromEntityInWorldCoords(entity, camCoords.x, camCoords.y, camCoords.z), true)
@@ -486,6 +566,16 @@ function ToggleAttachMode()
         DetachCam(cam)
 
         isAttached = false
+    end
+end
+
+function TogglePointing(flag)
+    if (flag and isAttached) then
+        pointEntity = true
+        PointCamAtEntity(cam, entity, 0.0, 0.0, 0.0, 1)
+    else
+        pointEntity = false
+        StopCamPointing(cam)
     end
 end
 
@@ -524,11 +614,11 @@ if (Cfg.useCommand) then
     end)
 end
 
--- void POINT_CAM_AT_ENTITY(Cam cam, Entity entity, float p2, float p3, float p4, BOOL p5);
+--void POINT_CAM_AT_ENTITY(Cam cam, Entity entity, float p2, float p3, float p4, BOOL p5);
 --void POINT_CAM_AT_COORD(Cam cam, float x, float y, float z);
 --void GET_CAM_MATRIX(Cam camera, Vector3* rightVector, Vector3* forwardVector, Vector3* upVector, Vector3* position);
 
-                --gegenkathete = x
-                --ankathete = y
-                --hypotenuse = 1
-                --alpha = GetCamRot(cam).z
+--gegenkathete = x
+--ankathete = y
+--hypotenuse = 1
+--alpha = GetCamRot(cam).z

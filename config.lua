@@ -19,7 +19,7 @@ Cfg.detachOption = true
 -- default: 5.0
 -- used to prevent e.g. Meta-Gaming and Bug-Abuse (looking through walls etc.)
 -- with 10,000 you can basically fly above the whole map from the middle but keep in mind, that LoD-states (Level of Detail) won't change as your character stays at its position
--- this is not used when the camera is detached
+-- this is unused when the camera is detached
 Cfg.maxDistance = 5000.0
 
 -- min and max speed settings for movement in m/s including increments (should always be above 0.0)
@@ -39,20 +39,14 @@ Cfg.maxFov = 130.0
 Cfg.strings = {
     noAccessError   = "[ERROR] FreeCam: At least one of the following values must be true! Cfg.useButton, Cfg.useCommand",
 
-    menuTitle       = "Freecam",
-    menuSubtitle    = "Control freecam",
+    menuTitle       = "Cinematic Cam",
+    menuSubtitle    = "Control the Cinematic Camera",
 
     toggleCam       = "Camera active",
     toggleCamDesc   = "Toggle camera on/off",
 
     precision       = "Camera Precision",
     precisionDesc   = "Change camera precision movement",
-
-    speed           = "Camera Speed",
-    speedDesc       = "Change camera movement speed",
-
-    camFov          = "Camera Field of View",
-    camFovDesc      = "Change camera Field of View",
 
     filter          = "Filter",
     filterDesc      = "Change camera Filter",
@@ -66,8 +60,14 @@ Cfg.strings = {
     showMap         = "Show Minimap",
     showMapDesc     = "Toggle minimap on/off",
 
+    freeFly         = "Toggle Free Fly Mode",
+    freeFlyDesc     = "Switch to Free Fly or back to Drone Mode",
+
     attachCam       = "Attach camera to: ",
     attachCamDesc   = "Attach the camera to an entity in front of it",
+
+    pointEntity     = "Point camera at entity",
+    pointEntityDesc = "Toggle pointing at selected entity",
 
     ctrlHelpRoll    = "Roll Left/Right",
     ctrlHelpMove    = "Movement",
@@ -97,7 +97,8 @@ Cfg.controls = {
     controller = {
         openMenu    = 244,  -- Select -- hold for ~1 second
 
-        hold        = 80,   -- O / B
+        holdSpeed   = 80,   -- O / B
+        holdFov     = 21,   -- X / A
         up          = 172,  -- D-pad up
         down        = 173,  -- D-pad down
 
@@ -125,6 +126,14 @@ Cfg.disabledControls = {
     14,     -- Mouse wheel down
     37,     -- Controller R1 (PS) / RT (XBOX)
     80,     -- Controller O (PS) / B (XBOX)
+    228,    -- 
+    229,    -- 
+    172,    -- 
+    173,    -- 
+    37,     -- 
+    44,     -- 
+    178,    -- 
+    244,    -- 
 }
 
 -- list of available filters ( https://pastebin.com/kVPwMemE )
