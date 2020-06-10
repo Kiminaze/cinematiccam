@@ -27,5 +27,6 @@ OR
 - Change Cfg.useNativeUI and Cfg.useNativeUIReloaded in config.lua to reflect the above changes
 
 **Setting up a permission based system:**
+- Uncomment server_scripts in the fxmanifest.lua
 - Change Cfg.usePermissions to true in config.lua
 - Open server.lua and insert whatever code you need in between the two comments and set the variable "isWhitelisted" to your result
