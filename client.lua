@@ -39,6 +39,8 @@ for i=0.1, 2.01, 0.1 do table.insert(filterInten, tostring(i)) end
 
 local freeFly = false
 
+local charControl = false
+
 local isAttached = false
 local entity
 local camCoords
@@ -58,6 +60,14 @@ local itemAttachCam
 
 local itemPointEntity
 
+-- permissions
+local whitelisted = nil
+
+-- print error if no UI or more than one was specified
+if ((Cfg.useNativeUI and Cfg.useNativeUIReloaded) or (not Cfg.useNativeUI and not Cfg.useNativeUIReloaded)) then
+    print(Cfg.strings.wrongUIError)
+end
+
 -- print error if no menu access was specified
 if (not(Cfg.useButton or Cfg.useCommand)) then
     print(Cfg.strings.noAccessError)
@@ -69,14 +79,29 @@ end
 ---------------------- LOOP ----------------------
 --------------------------------------------------
 Citizen.CreateThread(function()
+    if (Cfg.usePermissions) then
+        -- Request permissions here:
+        TriggerServerEvent('CinematicCam:requestPermissions')
+
+        -- Wait for permission request answer
+        while (whitelisted == nil) do
+            Citizen.Wait(1000)
+        end
+
+        if (whitelisted == false) then
+            return
+        end
+    end
+
+
     local pressedCount = 0
 
     camMenu = NativeUI.CreateMenu(Cfg.strings.menuTitle, Cfg.strings.menuSubtitle)
-	_menuPool:Add(camMenu)
+    _menuPool:Add(camMenu)
 
     while true do
         Citizen.Wait(1)
-        
+            
         -- process menu
         if (_menuPool:IsAnyMenuOpen()) then
             _menuPool:ProcessMenus()
@@ -108,6 +133,18 @@ Citizen.CreateThread(function()
 end)
 
 Citizen.CreateThread(function()
+    if (Cfg.usePermissions) then
+        -- Wait for permission request answer
+        while (whitelisted == nil) do
+            Citizen.Wait(1000)
+        end
+
+        if (whitelisted == false) then
+            return
+        end
+    end
+
+
     while true do
         Citizen.Wait(500)
 
@@ -165,11 +202,23 @@ function GenerateCamMenu()
     local submenuFilter = _menuPool:AddSubMenu(camMenu, Cfg.strings.filter, Cfg.strings.filterDesc)
     camMenu.Items[#camMenu.Items]:SetLeftBadge(15)
     itemFilter = NativeUI.CreateListItem(Cfg.strings.filter, Cfg.filterList, currFilter, Cfg.strings.filterDesc)
-    submenuFilter:AddItem(itemFilter)
+    if (Cfg.useNativeUIReloaded) then
+        submenuFilter.SubMenu:AddItem(itemFilter)
+    elseif (Cfg.useNativeUI) then
+        submenuFilter:AddItem(itemFilter)
+    end
     itemFilterIntensity = NativeUI.CreateListItem(Cfg.strings.filterInten, filterInten, currFilterIntensity, Cfg.strings.filterIntenDesc)
-    submenuFilter:AddItem(itemFilterIntensity)
+    if (Cfg.useNativeUIReloaded) then
+        submenuFilter.SubMenu:AddItem(itemFilterIntensity)
+    elseif (Cfg.useNativeUI) then
+        submenuFilter:AddItem(itemFilterIntensity)
+    end
     local itemDelFilter = NativeUI.CreateItem(Cfg.strings.delFilter, Cfg.strings.delFilterDesc)
-    submenuFilter:AddItem(itemDelFilter)
+    if (Cfg.useNativeUIReloaded) then
+        submenuFilter.SubMenu:AddItem(itemDelFilter)
+    elseif (Cfg.useNativeUI) then
+        submenuFilter:AddItem(itemDelFilter)
+    end
     
     local itemShowMap = NativeUI.CreateCheckboxItem(Cfg.strings.showMap, not IsRadarHidden(), Cfg.strings.showMapDesc)
     camMenu:AddItem(itemShowMap)
@@ -179,10 +228,10 @@ function GenerateCamMenu()
 
     itemAttachCam = NativeUI.CreateItem(Cfg.strings.attachCam, Cfg.strings.attachCamDesc)
     camMenu:AddItem(itemAttachCam)
-
-    --itemPointEntity = NativeUI.CreateCheckboxItem(Cfg.strings.pointEntity, pointEntity, Cfg.strings.pointEntityDesc)
-    --camMenu:AddItem(itemPointEntity)
     
+    local itemToggleCharacterControl = NativeUI.CreateCheckboxItem(Cfg.strings.charControl, charControl, Cfg.strings.charControlDesc)
+    camMenu:AddItem(itemToggleCharacterControl)
+
 
     itemToggleCam.CheckboxEvent = function(menu, item, checked)
         ToggleCam(checked, GetGameplayCamFov())
@@ -195,7 +244,7 @@ function GenerateCamMenu()
     itemShowMap.CheckboxEvent = function(menu, item, checked)
         ToggleUI(checked)
     end
-
+    
     itemToggleFreeFlyMode.CheckboxEvent = function(menu, item, checked)
         ToggleFreeFlyMode(checked)
     end
@@ -205,10 +254,10 @@ function GenerateCamMenu()
             ToggleAttachMode()
         end
     end
-
-    --[[itemPointEntity.CheckboxEvent = function(menu, item, checked)
-        TogglePointing(checked)
-    end]]
+    
+    itemToggleCharacterControl.CheckboxEvent = function(menu, item, checked)
+        ToggleCharacterControl(checked)
+    end
 
     itemFilter.OnListChanged = function(menu, item, newindex)
         ApplyFilter(newindex)
@@ -218,9 +267,17 @@ function GenerateCamMenu()
         ChangeFilterIntensity(newindex)
     end
 
-    submenuFilter.OnItemSelect = function(menu, item, index)
-        if (item == itemDelFilter) then
-            ResetFilter()
+    if (Cfg.useNativeUIReloaded) then
+        submenuFilter.SubMenu.OnItemSelect = function(menu, item, index)
+            if (item == itemDelFilter) then
+                ResetFilter()
+            end
+        end
+    elseif (Cfg.useNativeUI) then
+        submenuFilter.OnItemSelect = function(menu, item, index)
+            if (item == itemDelFilter) then
+                ResetFilter()
+            end
         end
     end
 
@@ -286,8 +343,10 @@ function ProcessCamControls()
     -- block weapon wheel (reason: scrolling)
     BlockWeaponWheelThisFrame()
     -- disable character/vehicle controls
-    for k, v in pairs(Cfg.disabledControls) do
-        DisableControlAction(0, v, true)
+    if (not charControl) then
+        for k, v in pairs(Cfg.disabledControls) do
+            DisableControlAction(0, v, true)
+        end
     end
 
     if (isAttached) then
@@ -330,13 +389,8 @@ function ProcessNewPosition(x, y, z)
     local _y = y
     local _z = z
 
---gegenkathete = z
---ankathete = y
---hypotenuse = 1
---alpha = GetCamRot(cam).x
-
     -- keyboard
-    if (IsInputDisabled(0)) then
+    if (IsInputDisabled(0) and not charControl) then
         if (IsDisabledControlPressed(1, Cfg.controls.keyboard.forwards)) then
             local multX = Sin(offsetRotZ)
             local multY = Cos(offsetRotZ)
@@ -425,10 +479,11 @@ function ProcessNewPosition(x, y, z)
         end
 
     -- controller
-    else
+    elseif (not charControl) then
         local multX = Sin(offsetRotZ)
         local multY = Cos(offsetRotZ)
         local multZ = Sin(offsetRotX)
+
         _x = _x - (0.1 * speed * multX * GetDisabledControlNormal(1, 32))
         _y = _y + (0.1 * speed * multY * GetDisabledControlNormal(1, 32))
         if (freeFly) then
@@ -547,6 +602,10 @@ function GetEntityInFrontOfCam()
     return entity
 end
 
+function ToggleCharacterControl(flag)
+    charControl = flag
+end
+
 function ToggleAttachMode()
     if (not isAttached) then
         entity = GetEntityInFrontOfCam()
@@ -607,12 +666,26 @@ end
 -- register command if specified in config
 if (Cfg.useCommand) then
     RegisterCommand(Cfg.command, function(source, args, raw)
-        if (not camMenu:Visible()) then
-            GenerateCamMenu()
-            camMenu:Visible(true)
+        if (not Cfg.usePermissions or (Cfg.usePermissions and whitelisted)) then
+            if (not camMenu:Visible()) then
+                GenerateCamMenu()
+                camMenu:Visible(true)
+            end
+        else
+            print("No permission to use this command!")
         end
     end)
 end
+
+
+--------------------------------------------------
+--------------------- EVENTS ---------------------
+--------------------------------------------------
+RegisterNetEvent('CinematicCam:receivePermissions')
+AddEventHandler('CinematicCam:receivePermissions', function(isWhitelisted)
+    whitelisted = isWhitelisted
+end)
+
 
 --void POINT_CAM_AT_ENTITY(Cam cam, Entity entity, float p2, float p3, float p4, BOOL p5);
 --void POINT_CAM_AT_COORD(Cam cam, float x, float y, float z);
