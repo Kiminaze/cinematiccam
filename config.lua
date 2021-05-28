@@ -5,8 +5,8 @@
 Cfg = {}
 
 -- specify, which menu should be used
-Cfg.useNativeUI = false
-Cfg.useNativeUIReloaded = true
+Cfg.useNativeUI = true
+Cfg.useNativeUIReloaded = false
 
 -- specify, if menu should be accessible via button press
 Cfg.useButton = true
