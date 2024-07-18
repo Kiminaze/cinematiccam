@@ -1,10 +1,15 @@
 --------------------------------------------------
 ---- CINEMATIC CAM FOR FIVEM MADE BY KIMINAZE ----
 --------------------------------------------------
+-- This script is client sided.
+
 
 --------------------------------------------------
 ------------------- VARIABLES --------------------
 --------------------------------------------------
+
+-- This function is loading your language file from 'config.lua'.
+SelectLanguage(Config.language);
 
 -- main variables
 local cam = nil
@@ -22,7 +27,7 @@ local counter = 0
 local precision = 1.0
 local currPrecisionIndex
 local precisions = {}
-for i = Cfg.minPrecision, Cfg.maxPrecision + 0.01, Cfg.incrPrecision do
+for i = Config.minPrecision, Config.maxPrecision + 0.01, Config.incrPrecision do
     table.insert(precisions, tostring(i))
     counter = counter + 1
     if (tostring(i) == "1.0") then
@@ -63,14 +68,9 @@ local itemPointEntity
 -- permissions
 local whitelisted = nil
 
--- print error if no UI or more than one was specified
-if ((Cfg.useNativeUI and Cfg.useNativeUIReloaded) or (not Cfg.useNativeUI and not Cfg.useNativeUIReloaded)) then
-    print(Cfg.strings.wrongUIError)
-end
-
 -- print error if no menu access was specified
-if (not(Cfg.useButton or Cfg.useCommand)) then
-    print(Cfg.strings.noAccessError)
+if (not(Config.useButton or Config.useCommand)) then
+    print(Config.strings.noAccessError)
 end
 
 
@@ -79,7 +79,7 @@ end
 ---------------------- LOOP ----------------------
 --------------------------------------------------
 Citizen.CreateThread(function()
-    if (Cfg.usePermissions) then
+    if (Config.usePermissions) then
         -- Request permissions here:
         TriggerServerEvent('CinematicCam:requestPermissions')
 
@@ -96,7 +96,7 @@ Citizen.CreateThread(function()
 
     local pressedCount = 0
 
-    camMenu = NativeUI.CreateMenu(Cfg.strings.menuTitle, Cfg.strings.menuSubtitle)
+    camMenu = NativeUI.CreateMenu(Config.strings.menuTitle, Config.strings.menuSubtitle)
     _menuPool:Add(camMenu)
 
     while true do
@@ -108,13 +108,13 @@ Citizen.CreateThread(function()
         end
 
         -- open / close menu on button press
-        if (Cfg.useButton) then
-            if (IsDisabledControlPressed(1, Cfg.controls.controller.openMenu)) then
+        if (Config.useButton) then
+            if (IsDisabledControlPressed(1, Config.controls.controller.openMenu)) then
                 pressedCount = pressedCount + 1 
-            elseif (IsDisabledControlJustReleased(1, Cfg.controls.controller.openMenu)) then
+            elseif (IsDisabledControlJustReleased(1, Config.controls.controller.openMenu)) then
                 pressedCount = 0
             end
-            if (IsDisabledControlJustReleased(1, Cfg.controls.keyboard.openMenu) or pressedCount >= 60) then
+            if (IsDisabledControlJustReleased(1, Config.controls.keyboard.openMenu) or pressedCount >= 60) then
                 if (pressedCount >= 60) then pressedCount = 0 end
                 if (camMenu:Visible()) then
                     camMenu:Visible(false)
@@ -133,7 +133,7 @@ Citizen.CreateThread(function()
 end)
 
 Citizen.CreateThread(function()
-    if (Cfg.usePermissions) then
+    if (Config.usePermissions) then
         -- Wait for permission request answer
         while (whitelisted == nil) do
             Citizen.Wait(1000)
@@ -180,56 +180,46 @@ function GenerateCamMenu()
     _menuPool = NativeUI.CreatePool()
     collectgarbage()
     
-    camMenu = NativeUI.CreateMenu(Cfg.strings.menuTitle, Cfg.strings.menuSubtitle)
+    camMenu = NativeUI.CreateMenu(Config.strings.menuTitle, Config.strings.menuSubtitle)
     _menuPool:Add(camMenu)
     
     -- add additional control help
     --camMenu:AddInstructionButton({GetControlInstructionalButton(1, 38, true), ""})
-    --camMenu:AddInstructionButton({GetControlInstructionalButton(1, 44, true), Cfg.strings.ctrlHelpRoll})
+    --camMenu:AddInstructionButton({GetControlInstructionalButton(1, 44, true), Config.strings.ctrlHelpRoll})
     --camMenu:AddInstructionButton({GetControlInstructionalButton(1, 36, true), ""})
     --camMenu:AddInstructionButton({GetControlInstructionalButton(1, 21, true), ""})
     --camMenu:AddInstructionButton({GetControlInstructionalButton(1, 30, true), ""})
-    --camMenu:AddInstructionButton({GetControlInstructionalButton(1, 31, true), Cfg.strings.ctrlHelpMove})
+    --camMenu:AddInstructionButton({GetControlInstructionalButton(1, 31, true), Config.strings.ctrlHelpMove})
     --camMenu:AddInstructionButton({GetControlInstructionalButton(1, 2, true), ""})
-    --camMenu:AddInstructionButton({GetControlInstructionalButton(1, 1, true), Cfg.strings.ctrlHelpRotate})
+    --camMenu:AddInstructionButton({GetControlInstructionalButton(1, 1, true), Config.strings.ctrlHelpRotate})
 
-    local itemToggleCam = NativeUI.CreateCheckboxItem(Cfg.strings.toggleCam, DoesCamExist(cam), Cfg.strings.toggleCamDesc)
+    local itemToggleCam = NativeUI.CreateCheckboxItem(Config.strings.toggleCam, DoesCamExist(cam), Config.strings.toggleCamDesc)
     camMenu:AddItem(itemToggleCam)
 
-    itemCamPrecision = NativeUI.CreateListItem(Cfg.strings.precision, precisions, currPrecisionIndex, Cfg.strings.precisionDesc)
+    itemCamPrecision = NativeUI.CreateListItem(Config.strings.precision, precisions, currPrecisionIndex, Config.strings.precisionDesc)
     camMenu:AddItem(itemCamPrecision)
 
-    local submenuFilter = _menuPool:AddSubMenu(camMenu, Cfg.strings.filter, Cfg.strings.filterDesc)
+    local submenuFilter = _menuPool:AddSubMenu(camMenu, Config.strings.filter, Config.strings.filterDesc)
     camMenu.Items[#camMenu.Items]:SetLeftBadge(15)
-    itemFilter = NativeUI.CreateListItem(Cfg.strings.filter, Cfg.filterList, currFilter, Cfg.strings.filterDesc)
-    if (Cfg.useNativeUIReloaded) then
-        submenuFilter.SubMenu:AddItem(itemFilter)
-    elseif (Cfg.useNativeUI) then
-        submenuFilter:AddItem(itemFilter)
-    end
-    itemFilterIntensity = NativeUI.CreateListItem(Cfg.strings.filterInten, filterInten, currFilterIntensity, Cfg.strings.filterIntenDesc)
-    if (Cfg.useNativeUIReloaded) then
-        submenuFilter.SubMenu:AddItem(itemFilterIntensity)
-    elseif (Cfg.useNativeUI) then
-        submenuFilter:AddItem(itemFilterIntensity)
-    end
-    local itemDelFilter = NativeUI.CreateItem(Cfg.strings.delFilter, Cfg.strings.delFilterDesc)
-    if (Cfg.useNativeUIReloaded) then
-        submenuFilter.SubMenu:AddItem(itemDelFilter)
-    elseif (Cfg.useNativeUI) then
-        submenuFilter:AddItem(itemDelFilter)
-    end
+    itemFilter = NativeUI.CreateListItem(Config.strings.filter, Config.filterList, currFilter, Config.strings.filterDesc)
+    submenuFilter:AddItem(itemFilter)
     
-    local itemShowMap = NativeUI.CreateCheckboxItem(Cfg.strings.showMap, not IsRadarHidden(), Cfg.strings.showMapDesc)
+    itemFilterIntensity = NativeUI.CreateListItem(Config.strings.filterInten, filterInten, currFilterIntensity, Config.strings.filterIntenDesc)
+    submenuFilter:AddItem(itemFilterIntensity)
+    
+    local itemDelFilter = NativeUI.CreateItem(Config.strings.delFilter, Config.strings.delFilterDesc)
+    submenuFilter:AddItem(itemDelFilter)
+    
+    local itemShowMap = NativeUI.CreateCheckboxItem(Config.strings.showMap, not IsRadarHidden(), Config.strings.showMapDesc)
     camMenu:AddItem(itemShowMap)
 
-    local itemToggleFreeFlyMode = NativeUI.CreateCheckboxItem(Cfg.strings.freeFly, freeFly, Cfg.strings.freeFlyDesc)
+    local itemToggleFreeFlyMode = NativeUI.CreateCheckboxItem(Config.strings.freeFly, freeFly, Config.strings.freeFlyDesc)
     camMenu:AddItem(itemToggleFreeFlyMode)
 
-    itemAttachCam = NativeUI.CreateItem(Cfg.strings.attachCam, Cfg.strings.attachCamDesc)
+    itemAttachCam = NativeUI.CreateItem(Config.strings.attachCam, Config.strings.attachCamDesc)
     camMenu:AddItem(itemAttachCam)
     
-    local itemToggleCharacterControl = NativeUI.CreateCheckboxItem(Cfg.strings.charControl, charControl, Cfg.strings.charControlDesc)
+    local itemToggleCharacterControl = NativeUI.CreateCheckboxItem(Config.strings.charControl, charControl, Config.strings.charControlDesc)
     camMenu:AddItem(itemToggleCharacterControl)
 
 
@@ -267,24 +257,15 @@ function GenerateCamMenu()
         ChangeFilterIntensity(newindex)
     end
 
-    if (Cfg.useNativeUIReloaded) then
-        submenuFilter.SubMenu.OnItemSelect = function(menu, item, index)
-            if (item == itemDelFilter) then
-                ResetFilter()
-            end
-        end
-    elseif (Cfg.useNativeUI) then
-        submenuFilter.OnItemSelect = function(menu, item, index)
-            if (item == itemDelFilter) then
-                ResetFilter()
-            end
+    submenuFilter.OnItemSelect = function(menu, item, index)
+        if (item == itemDelFilter) then
+            ResetFilter()
         end
     end
 
 
     _menuPool:ControlDisablingEnabled(false)
     _menuPool:MouseControlsEnabled(false)
-
     _menuPool:RefreshIndex()
 end
 
@@ -344,7 +325,7 @@ function ProcessCamControls()
     BlockWeaponWheelThisFrame()
     -- disable character/vehicle controls
     if (not charControl) then
-        for k, v in pairs(Cfg.disabledControls) do
+        for k, v in pairs(Config.disabledControls) do
             DisableControlAction(0, v, true)
         end
     end
@@ -360,7 +341,7 @@ function ProcessCamControls()
         AttachCamToEntity(cam, entity, offsetCoords.x, offsetCoords.y, offsetCoords.z, true)
 
         -- reset coords of cam if too far from entity
-        if (Vdist(0.0, 0.0, 0.0, offsetCoords.x, offsetCoords.y, offsetCoords.z) > Cfg.maxDistance) then
+        if (Vdist(0.0, 0.0, 0.0, offsetCoords.x, offsetCoords.y, offsetCoords.z) > Config.maxDistance) then
             AttachCamToEntity(cam, entity, offsetCoords.x, offsetCoords.y, offsetCoords.z, true)
         end
         
@@ -391,7 +372,7 @@ function ProcessNewPosition(x, y, z)
 
     -- keyboard
     if (IsInputDisabled(0) and not charControl) then
-        if (IsDisabledControlPressed(1, Cfg.controls.keyboard.forwards)) then
+        if (IsDisabledControlPressed(1, Config.controls.keyboard.forwards)) then
             local multX = Sin(offsetRotZ)
             local multY = Cos(offsetRotZ)
             local multZ = Sin(offsetRotX)
@@ -402,7 +383,7 @@ function ProcessNewPosition(x, y, z)
                 _z = _z + (0.1 * speed * multZ)
             end
         end
-        if (IsDisabledControlPressed(1, Cfg.controls.keyboard.backwards)) then
+        if (IsDisabledControlPressed(1, Config.controls.keyboard.backwards)) then
             local multX = Sin(offsetRotZ)
             local multY = Cos(offsetRotZ)
             local multZ = Sin(offsetRotX)
@@ -413,7 +394,7 @@ function ProcessNewPosition(x, y, z)
                 _z = _z - (0.1 * speed * multZ)
             end
         end
-        if (IsDisabledControlPressed(1, Cfg.controls.keyboard.left)) then
+        if (IsDisabledControlPressed(1, Config.controls.keyboard.left)) then
             local multX = Sin(offsetRotZ + 90.0)
             local multY = Cos(offsetRotZ + 90.0)
             local multZ = Sin(offsetRotY)
@@ -424,7 +405,7 @@ function ProcessNewPosition(x, y, z)
                 _z = _z + (0.1 * speed * multZ)
             end
         end
-        if (IsDisabledControlPressed(1, Cfg.controls.keyboard.right)) then
+        if (IsDisabledControlPressed(1, Config.controls.keyboard.right)) then
             local multX = Sin(offsetRotZ + 90.0)
             local multY = Cos(offsetRotZ + 90.0)
             local multZ = Sin(offsetRotY)
@@ -436,34 +417,34 @@ function ProcessNewPosition(x, y, z)
             end
         end
         
-        if (IsDisabledControlPressed(1, Cfg.controls.keyboard.up)) then
+        if (IsDisabledControlPressed(1, Config.controls.keyboard.up)) then
             _z = _z + (0.1 * speed)
         end
-        if (IsDisabledControlPressed(1, Cfg.controls.keyboard.down)) then
+        if (IsDisabledControlPressed(1, Config.controls.keyboard.down)) then
             _z = _z - (0.1 * speed)
         end
         
 
-        if (IsDisabledControlPressed(1, Cfg.controls.keyboard.hold)) then
+        if (IsDisabledControlPressed(1, Config.controls.keyboard.hold)) then
             -- hotkeys for speed
-            if (IsDisabledControlPressed(1, Cfg.controls.keyboard.speedUp)) then
-                if ((speed + 0.1) < Cfg.maxSpeed) then
+            if (IsDisabledControlPressed(1, Config.controls.keyboard.speedUp)) then
+                if ((speed + 0.1) < Config.maxSpeed) then
                     speed = speed + 0.1
                 else
-                    speed = Cfg.maxSpeed
+                    speed = Config.maxSpeed
                 end
-            elseif (IsDisabledControlPressed(1, Cfg.controls.keyboard.speedDown)) then
-                if ((speed - 0.1) > Cfg.minSpeed) then
+            elseif (IsDisabledControlPressed(1, Config.controls.keyboard.speedDown)) then
+                if ((speed - 0.1) > Config.minSpeed) then
                     speed = speed - 0.1
                 else
-                    speed = Cfg.minSpeed
+                    speed = Config.minSpeed
                 end
             end
         else
             -- hotkeys for FoV
-            if (IsDisabledControlPressed(1, Cfg.controls.keyboard.zoomOut)) then
+            if (IsDisabledControlPressed(1, Config.controls.keyboard.zoomOut)) then
                 ChangeFov(1.0)
-            elseif (IsDisabledControlPressed(1, Cfg.controls.keyboard.zoomIn)) then
+            elseif (IsDisabledControlPressed(1, Config.controls.keyboard.zoomIn)) then
                 ChangeFov(-1.0)
             end
         end
@@ -471,10 +452,10 @@ function ProcessNewPosition(x, y, z)
         -- rotation
         offsetRotX = offsetRotX - (GetDisabledControlNormal(1, 2) * precision * 8.0)
         offsetRotZ = offsetRotZ - (GetDisabledControlNormal(1, 1) * precision * 8.0)
-        if (IsDisabledControlPressed(1, Cfg.controls.keyboard.rollLeft)) then
+        if (IsDisabledControlPressed(1, Config.controls.keyboard.rollLeft)) then
             offsetRotY = offsetRotY - precision
         end
-        if (IsDisabledControlPressed(1, Cfg.controls.keyboard.rollRight)) then
+        if (IsDisabledControlPressed(1, Config.controls.keyboard.rollRight)) then
             offsetRotY = offsetRotY + precision
         end
 
@@ -513,28 +494,28 @@ function ProcessNewPosition(x, y, z)
 
         -- FoV, Speed, Up/Down Movement
         if (GetDisabledControlNormal(1, 228) ~= 0.0) then
-            if (IsDisabledControlPressed(1, Cfg.controls.controller.holdFov)) then
+            if (IsDisabledControlPressed(1, Config.controls.controller.holdFov)) then
                 ChangeFov(GetDisabledControlNormal(1, 228))
-            elseif (IsDisabledControlPressed(1, Cfg.controls.controller.holdSpeed)) then
+            elseif (IsDisabledControlPressed(1, Config.controls.controller.holdSpeed)) then
                 local newSpeed = speed - (0.1 * GetDisabledControlNormal(1, 228))
-                if (newSpeed > Cfg.minSpeed) then
+                if (newSpeed > Config.minSpeed) then
                     speed = newSpeed
                 else
-                    speed = Cfg.minSpeed
+                    speed = Config.minSpeed
                 end
             else
                 _z = _z - (0.1 * speed * GetDisabledControlNormal(1, 228))
             end
         end
         if (GetDisabledControlNormal(1, 229) ~= 0.0) then
-            if (IsDisabledControlPressed(1, Cfg.controls.controller.holdFov)) then
+            if (IsDisabledControlPressed(1, Config.controls.controller.holdFov)) then
                 ChangeFov(- GetDisabledControlNormal(1, 229))
-            elseif (IsDisabledControlPressed(1, Cfg.controls.controller.holdSpeed)) then
+            elseif (IsDisabledControlPressed(1, Config.controls.controller.holdSpeed)) then
                 local newSpeed = speed + (0.1 * GetDisabledControlNormal(1, 229))
-                if (newSpeed < Cfg.maxSpeed) then
+                if (newSpeed < Config.maxSpeed) then
                     speed = newSpeed
                 else
-                    speed = Cfg.maxSpeed
+                    speed = Config.maxSpeed
                 end
             else
                 _z = _z + (0.1 * speed * GetDisabledControlNormal(1, 229))
@@ -544,10 +525,10 @@ function ProcessNewPosition(x, y, z)
         -- rotation
         offsetRotX = offsetRotX - (GetDisabledControlNormal(1, 2) * precision)
         offsetRotZ = offsetRotZ - (GetDisabledControlNormal(1, 1) * precision)
-        if (IsDisabledControlPressed(1, Cfg.controls.controller.rollLeft)) then
+        if (IsDisabledControlPressed(1, Config.controls.controller.rollLeft)) then
             offsetRotY = offsetRotY - precision
         end
-        if (IsDisabledControlPressed(1, Cfg.controls.controller.rollRight)) then
+        if (IsDisabledControlPressed(1, Config.controls.controller.rollRight)) then
             offsetRotY = offsetRotY + precision
         end
     end
@@ -574,7 +555,7 @@ function ChangeFov(changeFov)
         local currFov   = GetCamFov(cam)
         local newFov    = currFov + changeFov
 
-        if ((newFov >= Cfg.minFov) and (newFov <= Cfg.maxFov)) then
+        if ((newFov >= Config.minFov) and (newFov <= Config.maxFov)) then
             SetCamFov(cam, newFov)
         end
     end
@@ -639,12 +620,12 @@ function TogglePointing(flag)
 end
 
 function ApplyFilter(filterIndex)
-    SetTimecycleModifier(Cfg.filterList[filterIndex])
+    SetTimecycleModifier(Config.filterList[filterIndex])
     currFilter = filterIndex
 end
 
 function ChangeFilterIntensity(intensityIndex)
-    SetTimecycleModifier(Cfg.filterList[currFilter])
+    SetTimecycleModifier(Config.filterList[currFilter])
     SetTimecycleModifierStrength(tonumber(filterInten[intensityIndex]))
     currFilterIntensity = intensityIndex
 end
@@ -664,9 +645,9 @@ end
 --------------------------------------------------
 
 -- register command if specified in config
-if (Cfg.useCommand) then
-    RegisterCommand(Cfg.command, function(source, args, raw)
-        if (not Cfg.usePermissions or (Cfg.usePermissions and whitelisted)) then
+if (Config.useCommand) then
+    RegisterCommand(Config.command, function(source, args, raw)
+        if (not Config.usePermissions or (Config.usePermissions and whitelisted)) then
             if (not camMenu:Visible()) then
                 GenerateCamMenu()
                 camMenu:Visible(true)
