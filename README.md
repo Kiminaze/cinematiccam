@@ -6,26 +6,26 @@
 The Cinematic Cam provides the user with an easy to use "additional" camera, that can be moved freely in the world. 
 Additionally it can be attached to any npc/player/vehicle in the game in order to provide something similar to a "Dashcam" or just for fancy screenshots or videos.
 You can set it on a specific position and angle relative to your character and the camera will move with the entity.
+<br/><br/>
+
+**Requirements:**
+- NativeUILua by Frazzle. ( [NativeUILua](https://github.com/FrazzIe/NativeUILua/archive/refs/heads/master.zip) )
+<br/><br/>
 
 **Features included:**
-- complete control using NativeUILua by Frazzle ( [NativeUILua](https://github.com/FrazzIe/NativeUILua/archive/refs/heads/master.zip) )
-- toggle the camera on / off
-- moving and rotating on all axes
-- using mouse AND controller input for rotation
-- setting precise rotation
-- setting field of view and speed of the camera
-- applying / removing a filter
-- setting filter intensity
-- toggle minimap on / off
-- attach camera to any npc/player/vehicle entity
-- toggle between player and camera control
-- you can now set up a permission based system rather easily
-
-**Switching between NativeUILua and NativeUILua-Reloaded:**
-- Change the client_scripts in fxmanifest.lua to whichever one you are using (make sure the names are correct as well!)
-- Change Config.useNativeUI and Config.useNativeUIReloaded in config.lua to reflect the above changes
+- Toggle the camera on / off.
+- Moving and rotating on all axes.
+- Using mouse AND controller input for rotation.
+- Setting precise rotation.
+- Setting field of view and speed of the camera.
+- Applying / removing a filter.
+- Setting filter intensity.
+- Toggle minimap on / off.
+- Attach camera to any npc/player/vehicle entity.
+- Toggle between player and camera control.
+- You can set up a permission based system rather easily.
+<br/><br/>
 
 **Setting up a permission based system:**
-- Uncomment server_scripts in the fxmanifest.lua
-- Change Config.usePermissions to true in config.lua
-- Open server.lua and insert whatever code you need in between the two comments and set the variable "isWhitelisted" to your result
+- Set `Config.usePermissions` to true in `config.lua`
+- Add ace permissions with the name `"CinematicCamPermission"` in your `server.cfg`
