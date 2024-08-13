@@ -35,10 +35,13 @@ Config.usePermissions = true
 Config.detachOption = true
 
 -- Values are in meters. Default: 5.0
--- Used to prevent e.g. Meta-Gaming and Bug-Abuse. (Looking through walls etc.)
--- With 10,000 you can basically fly above the whole map from the middle but keep in mind, that LoD-states (Level of Detail) won't change as your character stays at its position.
--- This is unused when the camera is detached.
-Config.maxDistance = 5000.0
+-- Only works with Config.noMetaGaming = true or if you attche the camera to an object.
+-- Dont set it above 350.0
+Config.maxDistance = 5.0
+
+-- This config will remove the camera attach function (on vehicle or other objects) if set to true.
+-- If you set this to true, change also the Config.maxDistance to a short range like 5.0.
+Config.noMetaGaming = false
 
 -- Min and max speed settings for movement in m/s including increments. (Should always be above 0.0)
 Config.minSpeed    = 0.1
