@@ -132,44 +132,45 @@ Citizen.CreateThread(function()
     end
 end)
 
-Citizen.CreateThread(function()
-    if (Config.usePermissions) then
-        -- Wait for permission request answer
-        while (whitelisted == nil) do
-            Citizen.Wait(1000)
+if ( not Config.noMetaGaming ) then
+    Citizen.CreateThread(function()
+        if (Config.usePermissions) then
+            -- Wait for permission request answer
+            while (whitelisted == nil) do
+                Citizen.Wait(1000)
+            end
+
+            if (whitelisted == false) then
+                return
+            end
         end
 
-        if (whitelisted == false) then
-            return
-        end
-    end
 
+        while true do
+            Citizen.Wait(500)
 
-    while true do
-        Citizen.Wait(500)
+            if (camMenu:Visible() and cam) then
+                local tempEntity = GetEntityInFrontOfCam()
+                local txt = "-"
+                if (DoesEntityExist(tempEntity)) then
+                    txt = tostring(GetEntityModel(tempEntity))
+                    if (IsEntityAVehicle(tempEntity)) then
+                        txt = GetLabelText(GetDisplayNameFromVehicleModel(GetEntityModel(tempEntity)))
+                    end
+                end
+                itemAttachCam:RightLabel(txt)
 
-        if (camMenu:Visible() and cam) then
-            local tempEntity = GetEntityInFrontOfCam()
-            local txt = "-"
-            if (DoesEntityExist(tempEntity)) then
-                txt = tostring(GetEntityModel(tempEntity))
-                if (IsEntityAVehicle(tempEntity)) then
-                    txt = GetLabelText(GetDisplayNameFromVehicleModel(GetEntityModel(tempEntity)))
+                if (isAttached and not DoesEntityExist(entity)) then
+                    isAttached = false
+
+                    ClearFocus()
+
+                    StopCamPointing(cam)
                 end
             end
-            itemAttachCam:RightLabel(txt)
-
-            if (isAttached and not DoesEntityExist(entity)) then
-                isAttached = false
-
-                ClearFocus()
-
-                StopCamPointing(cam)
-            end
         end
-    end
-end)
-
+    end)
+end
 
 
 --------------------------------------------------
@@ -216,8 +217,10 @@ function GenerateCamMenu()
     local itemToggleFreeFlyMode = NativeUI.CreateCheckboxItem(Config.strings.freeFly, freeFly, Config.strings.freeFlyDesc)
     camMenu:AddItem(itemToggleFreeFlyMode)
 
-    itemAttachCam = NativeUI.CreateItem(Config.strings.attachCam, Config.strings.attachCamDesc)
-    camMenu:AddItem(itemAttachCam)
+    if ( not Config.noMetaGaming ) then
+        itemAttachCam = NativeUI.CreateItem(Config.strings.attachCam, Config.strings.attachCamDesc)
+        camMenu:AddItem(itemAttachCam)
+    end
     
     local itemToggleCharacterControl = NativeUI.CreateCheckboxItem(Config.strings.charControl, charControl, Config.strings.charControlDesc)
     camMenu:AddItem(itemToggleCharacterControl)
@@ -239,9 +242,11 @@ function GenerateCamMenu()
         ToggleFreeFlyMode(checked)
     end
 
-    camMenu.OnItemSelect = function(menu, item, index)
-        if (item == itemAttachCam) then
-            ToggleAttachMode()
+    if ( not Config.noMetaGaming ) then
+        camMenu.OnItemSelect = function(menu, item, index)
+            if (item == itemAttachCam) then
+                ToggleAttachMode()
+            end
         end
     end
     
@@ -287,6 +292,10 @@ function StartFreeCam(fov)
     RenderScriptCams(true, false, 0, true, false)
     
     SetCamAffectsAiming(cam, false)
+
+    if ( Config.noMetaGaming ) then
+        ToggleAttachMode(PlayerPedId())
+    end
 
     if (isAttached and DoesEntityExist(entity)) then
         offsetCoords = GetOffsetFromEntityGivenWorldCoords(entity, GetCamCoord(cam))
@@ -335,15 +344,17 @@ function ProcessCamControls()
         offsetCoords = ProcessNewPosition(offsetCoords.x, offsetCoords.y, offsetCoords.z)
         
         -- focus entity
-        SetFocusEntity(entity)
+        SetFocusEntity(entity)    
+
+        -- reset coords of cam if too far from entity
+        local distance = #(vector3(offsetCoords.x, offsetCoords.y, offsetCoords.z))
+        if (distance > Config.maxDistance) then
+            local factor = distance / Config.maxDistance
+            offsetCoords = vector3(offsetCoords.x, offsetCoords.y, offsetCoords.z) / factor
+        end
 
         -- set coords
         AttachCamToEntity(cam, entity, offsetCoords.x, offsetCoords.y, offsetCoords.z, true)
-
-        -- reset coords of cam if too far from entity
-        if (Vdist(0.0, 0.0, 0.0, offsetCoords.x, offsetCoords.y, offsetCoords.z) > Config.maxDistance) then
-            AttachCamToEntity(cam, entity, offsetCoords.x, offsetCoords.y, offsetCoords.z, true)
-        end
         
         -- set rotation
         local entityRot = GetEntityRotation(entity, 2)
@@ -587,9 +598,9 @@ function ToggleCharacterControl(flag)
     charControl = flag
 end
 
-function ToggleAttachMode()
+function ToggleAttachMode(playerEntity)
     if (not isAttached) then
-        entity = GetEntityInFrontOfCam()
+        entity = playerEntity or GetEntityInFrontOfCam()
         
         if (DoesEntityExist(entity)) then
             offsetCoords = GetOffsetFromEntityGivenWorldCoords(entity, GetCamCoord(cam))
