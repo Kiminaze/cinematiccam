@@ -10,6 +10,11 @@ You can set it on a specific position and angle relative to your character and t
 
 **Requirements:**
 - NativeUILua by Frazzle. ( [NativeUILua](https://github.com/FrazzIe/NativeUILua/archive/refs/heads/master.zip) )
+
+**Known issue**
+- If you got this error: "SCRIPT ERROR: @cinematiccam/client/client.lua:180: attempt to call a nil value (method \`Remove\`)"
+- Please download [NativeUILua](https://github.com/FrazzIe/NativeUILua/archive/refs/heads/master.zip) again from this link.
+- The "latest release" is an older version and hasn't been updated by the developer.
 <br/><br/>
 
 **Features included:**
