@@ -29,7 +29,7 @@ Config.command = "cam"
 
 -- Specify, if this camera should be permission based.
 -- For permission settings look in the 'Permission.lua' file.
-Config.usePermissions = true
+Config.usePermissions = false
 
 -- Show an extra option to have a completely free to move camera.
 Config.detachOption = true

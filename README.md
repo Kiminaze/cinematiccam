@@ -32,6 +32,7 @@ entity.
 
 - Set `Config.usePermissions` to true in `config.lua`
 - Add ace permissions with the name `"CinematicCamPermission"` in your `server.cfg`
+- Example: `add_ace identifier.steam:steamidhere "CinematicCamPermission" allow` (check permission.lua for more)
 
 
 ## Known issue
