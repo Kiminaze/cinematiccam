@@ -1,4 +1,4 @@
---------------------------------------------------
+﻿--------------------------------------------------
 ---- CINEMATIC CAM FOR FIVEM MADE BY KIMINAZE ----
 --------------------------------------------------
 -- This script is client sided.
@@ -72,6 +72,8 @@ local whitelisted = nil
 if (not(Config.useButton or Config.useCommand)) then
     print(Config.strings.noAccessError)
 end
+
+
 
 
 
@@ -216,6 +218,20 @@ function GenerateCamMenu()
 
     local itemToggleFreeFlyMode = NativeUI.CreateCheckboxItem(Config.strings.freeFly, freeFly, Config.strings.freeFlyDesc)
     camMenu:AddItem(itemToggleFreeFlyMode)
+
+    -- checking if OrbitCam is running
+    if (GetResourceState("OrbitCam") == "started") then
+        local itemOrbitCamMode = NativeUI.CreateCheckboxItem(Config.strings.OrbitLabel, false, Config.strings.OrbitDescription)
+        camMenu:AddItem(itemOrbitCamMode)
+        itemOrbitCamMode.CheckboxEvent = function(menu, item, checked)
+            if (checked) then
+                exports["OrbitCam"]:StartOrbitCam(Config.OrbitOffset, PlayerPedId(), nil, nil, nil, nil)
+                exports["OrbitCam"]:SetAutoOrbitSpeed(Config.OrbitSpeed, Config.OrbitControl)
+            else
+                exports["OrbitCam"]:EndOrbitCam()
+            end
+        end
+    end
 
     if ( not Config.noMetaGaming ) then
         itemAttachCam = NativeUI.CreateItem(Config.strings.attachCam, Config.strings.attachCamDesc)

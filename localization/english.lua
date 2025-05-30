@@ -13,7 +13,7 @@ Language["english"] = {
 
     menuTitle       = "Cinematic Cam",
     menuSubtitle    = "Control the Cinematic Camera",
-
+    
     toggleCam       = "Camera active",
     toggleCamDesc   = "Toggle camera on/off",
 
@@ -46,5 +46,8 @@ Language["english"] = {
 
     ctrlHelpRoll    = "Roll Left/Right",
     ctrlHelpMove    = "Movement",
-    ctrlHelpRotate  = "Rotate"
+    ctrlHelpRotate  = "Rotate",
+
+    OrbitLabel       = "OrbitCam",
+    OrbitDescription = "An orbiting camera above your character."
 }

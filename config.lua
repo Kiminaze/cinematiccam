@@ -1,4 +1,4 @@
---------------------------------------------------
+﻿--------------------------------------------------
 ---- CINEMATIC CAM FOR FIVEM MADE BY KIMINAZE ----
 --------------------------------------------------
 -- This script is client sided.
@@ -55,6 +55,11 @@ Config.maxPrecision    = 2.0
 -- Min and max FoV (field of view) settings. (Should always be in between 1.0f and 130.0f!)
 Config.minFov = 1.0
 Config.maxFov = 130.0
+
+-- settings for OrbitCam mode
+Config.OrbitSpeed       = 0.1
+Config.OrbitOffset      = vector3(0.0, 0.0, 0.5)
+Config.OrbitControl     = false
 
 
 Config.controls = {
