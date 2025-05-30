@@ -73,6 +73,16 @@ if (not(Config.useButton or Config.useCommand)) then
     print(Config.strings.noAccessError)
 end
 
+-- OrbitalCam
+local currOrbitSpeed = 0.1
+local boneNames = {}
+local boneIds   = {}
+local currOrbitBone = nil
+
+for name, id in pairs (bonesList) do
+    table.insert(boneNames, name)
+    table.insert(boneIds, id)
+end
 
 
 
@@ -221,16 +231,40 @@ function GenerateCamMenu()
 
     -- checking if OrbitCam is running
     if (GetResourceState("OrbitCam") == "started") then
-        local itemOrbitCamMode = NativeUI.CreateCheckboxItem(Config.strings.OrbitLabel, false, Config.strings.OrbitDescription)
-        camMenu:AddItem(itemOrbitCamMode)
+        local submenuOrbitCam = _menuPool:AddSubMenu(camMenu, Config.strings.OrbitLabel, Config.strings.OrbitDescription)
+
+        local itemOrbitCamMode = NativeUI.CreateCheckboxItem(Config.strings.OrbitLabel, exports["OrbitCam"]:IsOrbitCamActive(), Config.strings.OrbitDescription)
+        submenuOrbitCam:AddItem(itemOrbitCamMode)
         itemOrbitCamMode.CheckboxEvent = function(menu, item, checked)
             if (checked) then
-                exports["OrbitCam"]:StartOrbitCam(Config.OrbitOffset, PlayerPedId(), nil, nil, nil, nil)
-                exports["OrbitCam"]:SetAutoOrbitSpeed(Config.OrbitSpeed, Config.OrbitControl)
+                exports["OrbitCam"]:StartOrbitCam(Config.OrbitOffset, PlayerPedId(), nil, nil, nil, currOrbitBone)
+                exports["OrbitCam"]:SetAutoOrbitSpeed(currOrbitSpeed, Config.OrbitControl)
             else
                 exports["OrbitCam"]:EndOrbitCam()
             end
         end
+
+        local itemOrbitCamSpeed = NativeUI.CreateListItem(Config.strings.OrbitSpeedLabel, filterInten, 1, Config.strings.OrbitSpeedDesc)
+        submenuOrbitCam:AddItem(itemOrbitCamSpeed)
+        itemOrbitCamSpeed.OnListChanged = function(menu, item, newindex)
+            currOrbitSpeed = tonumber(filterInten[newindex])
+            exports["OrbitCam"]:SetAutoOrbitSpeed(currOrbitSpeed, true)
+        end
+
+        local itemOrbitPlayerControl = NativeUI.CreateCheckboxItem(Config.strings.OrbitPlayerCon, true, Config.strings.OrbitPlayerConDesc)
+        submenuOrbitCam:AddItem(itemOrbitPlayerControl)
+        itemOrbitPlayerControl.CheckboxEvent = function(menu, item, checked)
+            exports["OrbitCam"]:SetAutoOrbitSpeed(currOrbitSpeed, not checked)
+        end
+
+        --[[ local itemOrbitBonesList = NativeUI.CreateListItem(Config.strings.OrbitBoneLabel, boneNames, 1, Config.strings.OrbitBoneDesc)
+        submenuOrbitCam:AddItem(itemOrbitBonesList)
+        itemOrbitBonesList.OnListChanged = function(menu, item, newindex)
+            currOrbitBone = newindex
+            boneIndex = GetEntityBoneIndexByName(ped, boneNames[currOrbitBone])
+            exports["OrbitCam"]:UpdateCamPosition(Config.OrbitOffset, PlayerPedId(), nil, nil, boneIndex)
+        end
+        --]]
     end
 
     if ( not Config.noMetaGaming ) then

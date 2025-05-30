@@ -48,5 +48,11 @@ Language["german"] = {
     ctrlHelpRotate  = "Drehen",
 
     OrbitLabel       = "OrbitCam",
-    OrbitDescription = "Eine Kamera die sich um den Charakter dreht."
+    OrbitDescription = "Eine Kamera die sich um den Charakter dreht.",
+    OrbitSpeedLabel  = "Umdrehungsstärke",
+    OrbitSpeedDesc   = "Wie schnell sich die Kamera dreht.",
+    OrbitPlayerCon      = "Kontrolle",
+    OrbitPlayerConDesc  = "Aktiviere oder deaktiviere Spielereingaben.",
+    OrbitBoneLabel      = "Bone",
+    OrbitBoneDesc       = "Der bone um den die Kamera sich dreht."
 }

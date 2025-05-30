@@ -49,5 +49,11 @@ Language["english"] = {
     ctrlHelpRotate  = "Rotate",
 
     OrbitLabel       = "OrbitCam",
-    OrbitDescription = "An orbiting camera above your character."
+    OrbitDescription = "An orbiting camera above your character.",
+    OrbitSpeedLabel  = "Rotation speed",
+    OrbitSpeedDesc   = "How fast the camera rotates.",
+    OrbitPlayerCon      = "Controls",
+    OrbitPlayerConDesc  = "Activate or deactivate player controls.",
+    OrbitBoneLabel      = "Bone",
+    OrbitBoneDesc       = "The bone that the camera orbits around."
 }

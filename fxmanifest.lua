@@ -10,6 +10,7 @@ author "Kiminaze - Kiminaze`s Script Gems"
 client_scripts {
 	"@NativeUI/NativeUI.lua", -- Please check that your NativeUI script file is named like this!
 	"client/language.lua",
+	"client/boneSelects.lua",
 	"localization/*.lua", -- This will load all localization files, no need to add them.
 	"config.lua",
 	"client/cameraFilter.lua",
