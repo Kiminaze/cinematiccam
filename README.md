@@ -25,6 +25,7 @@ entity.
 - Toggle minimap on/off.
 - Attach camera to any npc/player/vehicle entity.
 - Toggle between player and camera control.
+- Support for the [OrbitCam](https://github.com/Kiminaze/OrbitCam) resource.
 - You can set up a permission based system rather easily.
 
 
