@@ -4,8 +4,14 @@
 
 fx_version "cerulean"
 games { "gta5" }
-author "Kiminaze - Kiminaze`s Script Gems"
 
+author "Philipp Decker"
+description "Cinematic camera for fancy screenshots or videos!"
+version "1.1.0"
+
+server_scripts {
+	"server/permission.lua"
+}
 
 client_scripts {
 	"@NativeUI/NativeUI.lua", -- Please check that your NativeUI script file is named like this!
@@ -15,11 +21,6 @@ client_scripts {
 	"config.lua",
 	"client/cameraFilter.lua",
 	"client/client.lua"
-}
-
-
-server_scripts {
-	"server/permission.lua"
 }
 
 dependency "NativeUI"
