@@ -165,9 +165,10 @@ if ( not Config.noMetaGaming ) then
                 local tempEntity = GetEntityInFrontOfCam()
                 local txt = "-"
                 if (DoesEntityExist(tempEntity)) then
-                    txt = tostring(GetEntityModel(tempEntity))
                     if (IsEntityAVehicle(tempEntity)) then
                         txt = GetLabelText(GetDisplayNameFromVehicleModel(GetEntityModel(tempEntity)))
+                    else
+                        txt = GetEntityArchetypeName(tempEntity)
                     end
                 end
                 itemAttachCam:RightLabel(txt)
@@ -237,7 +238,7 @@ function GenerateCamMenu()
         submenuOrbitCam:AddItem(itemOrbitCamMode)
         itemOrbitCamMode.CheckboxEvent = function(menu, item, checked)
             if (checked) then
-                exports["OrbitCam"]:StartOrbitCam(Config.OrbitOffset, PlayerPedId(), nil, nil, nil, currOrbitBone)
+                exports["OrbitCam"]:StartOrbitCam(Config.OrbitOffset, entity or PlayerPedId(), nil, nil, nil, not DoesEntityExist(entity) and currOrbitBone or nil)
                 exports["OrbitCam"]:SetAutoOrbitSpeed(currOrbitSpeed, Config.OrbitControl)
             else
                 exports["OrbitCam"]:EndOrbitCam()
@@ -257,14 +258,14 @@ function GenerateCamMenu()
             exports["OrbitCam"]:SetAutoOrbitSpeed(currOrbitSpeed, not checked)
         end
 
-        --[[ local itemOrbitBonesList = NativeUI.CreateListItem(Config.strings.OrbitBoneLabel, boneNames, 1, Config.strings.OrbitBoneDesc)
+        local itemOrbitBonesList = NativeUI.CreateListItem(Config.strings.OrbitBoneLabel, boneNames, 1, Config.strings.OrbitBoneDesc)
         submenuOrbitCam:AddItem(itemOrbitBonesList)
         itemOrbitBonesList.OnListChanged = function(menu, item, newindex)
             currOrbitBone = newindex
+            local ped = PlayerPedId()
             boneIndex = GetEntityBoneIndexByName(ped, boneNames[currOrbitBone])
-            exports["OrbitCam"]:UpdateCamPosition(Config.OrbitOffset, PlayerPedId(), nil, nil, boneIndex)
+            exports["OrbitCam"]:UpdateCamPosition(Config.OrbitOffset, ped, nil, nil, boneIndex)
         end
-        --]]
     end
 
     if ( not Config.noMetaGaming ) then
@@ -636,11 +637,11 @@ function ToggleFreeFlyMode(flag)
 end
 
 function GetEntityInFrontOfCam()
-    local camCoords = GetCamCoord(cam)
-    local offset = {x = camCoords.x - Sin(offsetRotZ) * 100.0, y = camCoords.y + Cos(offsetRotZ) * 100.0, z = camCoords.z + Sin(offsetRotX) * 100.0}
+    local _, forward, _, position = GetCamMatrix(cam)
+    local offset = position + forward * 50.0
 
-    local rayHandle = StartShapeTestRay(camCoords.x, camCoords.y, camCoords.z, offset.x, offset.y, offset.z, 10, 0, 0)
-    local a, b, c, d, entity = GetShapeTestResult(rayHandle)
+    local rayHandle = StartShapeTestRay(position.x, position.y, position.z, offset.x, offset.y, offset.z, 30, 0, 4)
+    local _, _, _, _, entity = GetShapeTestResult(rayHandle)
     return entity
 end
 
