@@ -73,6 +73,18 @@ if (not(Config.useButton or Config.useCommand)) then
     print(Config.strings.noAccessError)
 end
 
+-- OrbitalCam
+local currOrbitSpeed = 0.1
+local boneNames = {}
+local boneIds   = {}
+local currOrbitBone = nil
+
+for name, id in pairs (bonesList) do
+    table.insert(boneNames, name)
+    table.insert(boneIds, id)
+end
+
+
 
 
 --------------------------------------------------
@@ -153,9 +165,10 @@ if ( not Config.noMetaGaming ) then
                 local tempEntity = GetEntityInFrontOfCam()
                 local txt = "-"
                 if (DoesEntityExist(tempEntity)) then
-                    txt = tostring(GetEntityModel(tempEntity))
                     if (IsEntityAVehicle(tempEntity)) then
                         txt = GetLabelText(GetDisplayNameFromVehicleModel(GetEntityModel(tempEntity)))
+                    else
+                        txt = GetEntityArchetypeName(tempEntity)
                     end
                 end
                 itemAttachCam:RightLabel(txt)
@@ -216,6 +229,44 @@ function GenerateCamMenu()
 
     local itemToggleFreeFlyMode = NativeUI.CreateCheckboxItem(Config.strings.freeFly, freeFly, Config.strings.freeFlyDesc)
     camMenu:AddItem(itemToggleFreeFlyMode)
+
+    -- checking if OrbitCam is running
+    if (GetResourceState("OrbitCam") == "started") then
+        local submenuOrbitCam = _menuPool:AddSubMenu(camMenu, Config.strings.OrbitLabel, Config.strings.OrbitDescription)
+
+        local itemOrbitCamMode = NativeUI.CreateCheckboxItem(Config.strings.OrbitLabel, exports["OrbitCam"]:IsOrbitCamActive(), Config.strings.OrbitDescription)
+        submenuOrbitCam:AddItem(itemOrbitCamMode)
+        itemOrbitCamMode.CheckboxEvent = function(menu, item, checked)
+            if (checked) then
+                exports["OrbitCam"]:StartOrbitCam(Config.OrbitOffset, entity or PlayerPedId(), nil, nil, nil, not DoesEntityExist(entity) and currOrbitBone or nil)
+                exports["OrbitCam"]:SetAutoOrbitSpeed(currOrbitSpeed, Config.OrbitControl)
+            else
+                exports["OrbitCam"]:EndOrbitCam()
+            end
+        end
+
+        local itemOrbitCamSpeed = NativeUI.CreateListItem(Config.strings.OrbitSpeedLabel, filterInten, 1, Config.strings.OrbitSpeedDesc)
+        submenuOrbitCam:AddItem(itemOrbitCamSpeed)
+        itemOrbitCamSpeed.OnListChanged = function(menu, item, newindex)
+            currOrbitSpeed = tonumber(filterInten[newindex])
+            exports["OrbitCam"]:SetAutoOrbitSpeed(currOrbitSpeed, true)
+        end
+
+        local itemOrbitPlayerControl = NativeUI.CreateCheckboxItem(Config.strings.OrbitPlayerCon, true, Config.strings.OrbitPlayerConDesc)
+        submenuOrbitCam:AddItem(itemOrbitPlayerControl)
+        itemOrbitPlayerControl.CheckboxEvent = function(menu, item, checked)
+            exports["OrbitCam"]:SetAutoOrbitSpeed(currOrbitSpeed, not checked)
+        end
+
+        local itemOrbitBonesList = NativeUI.CreateListItem(Config.strings.OrbitBoneLabel, boneNames, 1, Config.strings.OrbitBoneDesc)
+        submenuOrbitCam:AddItem(itemOrbitBonesList)
+        itemOrbitBonesList.OnListChanged = function(menu, item, newindex)
+            currOrbitBone = newindex
+            local ped = PlayerPedId()
+            boneIndex = GetEntityBoneIndexByName(ped, boneNames[currOrbitBone])
+            exports["OrbitCam"]:UpdateCamPosition(Config.OrbitOffset, ped, nil, nil, boneIndex)
+        end
+    end
 
     if ( not Config.noMetaGaming ) then
         itemAttachCam = NativeUI.CreateItem(Config.strings.attachCam, Config.strings.attachCamDesc)
@@ -586,11 +637,11 @@ function ToggleFreeFlyMode(flag)
 end
 
 function GetEntityInFrontOfCam()
-    local camCoords = GetCamCoord(cam)
-    local offset = {x = camCoords.x - Sin(offsetRotZ) * 100.0, y = camCoords.y + Cos(offsetRotZ) * 100.0, z = camCoords.z + Sin(offsetRotX) * 100.0}
+    local _, forward, _, position = GetCamMatrix(cam)
+    local offset = position + forward * 50.0
 
-    local rayHandle = StartShapeTestRay(camCoords.x, camCoords.y, camCoords.z, offset.x, offset.y, offset.z, 10, 0, 0)
-    local a, b, c, d, entity = GetShapeTestResult(rayHandle)
+    local rayHandle = StartShapeTestRay(position.x, position.y, position.z, offset.x, offset.y, offset.z, 30, 0, 4)
+    local _, _, _, _, entity = GetShapeTestResult(rayHandle)
     return entity
 end
 

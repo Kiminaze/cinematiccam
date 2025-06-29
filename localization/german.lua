@@ -9,7 +9,7 @@
 Language["german"] = {
     noAccessError   = "[Fehler] CinematicCam: Mindestens einer der folgenden Variablen muss zutreffen: Config.useButton oder Config.useCommand und keine der beiden trifft gerade zu!",
     wrongUIError    = "[Fehler] CinematicCam: In der config.lua darf maximal eine UI angegeben werden, es sind gerade mehrere aktiv!",
-
+    
     menuTitle       = "CinematicCam",
     menuSubtitle    = "Die CinematicCam Kontrollen",
 
@@ -45,5 +45,14 @@ Language["german"] = {
 
     ctrlHelpRoll    = "Rollen Links/Rechts",
     ctrlHelpMove    = "Bewegen",
-    ctrlHelpRotate  = "Drehen"
+    ctrlHelpRotate  = "Drehen",
+
+    OrbitLabel       = "OrbitCam",
+    OrbitDescription = "Eine Kamera die sich um den Charakter dreht.",
+    OrbitSpeedLabel  = "Umdrehungsstärke",
+    OrbitSpeedDesc   = "Wie schnell sich die Kamera dreht.",
+    OrbitPlayerCon      = "Kontrolle",
+    OrbitPlayerConDesc  = "Aktiviere oder deaktiviere Spielereingaben.",
+    OrbitBoneLabel      = "Bone",
+    OrbitBoneDesc       = "Der bone um den die Kamera sich dreht."
 }

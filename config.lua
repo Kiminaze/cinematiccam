@@ -56,6 +56,10 @@ Config.maxPrecision    = 2.0
 Config.minFov = 1.0
 Config.maxFov = 130.0
 
+-- settings for OrbitCam mode
+Config.OrbitOffset      = vector3(0.0, 0.0, 0.5)
+Config.OrbitControl     = false
+
 
 Config.controls = {
     keyboard = {
