@@ -17,6 +17,9 @@ AddEventHandler("CinematicCam:requestPermissions", function()
 	-- add_ace identifier.steam:steamidhere "CinematicCamPermission" allow
 	-- or add permissions with the rockstar license:
 	-- add_ace identifier.license:rockstarlicenshere "CinematicCamPermission" allow
+	-- or add a group ace permission in your 'server.cfg':
+	-- add_ace group.owner "CinematicCamPermission" allow
+	-- add_ace group.admin "CinematicCamPermission" allow
 	if IsPlayerAceAllowed(source, "CinematicCamPermission") then
 		isWhitelisted = true;
 	end
