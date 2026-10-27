@@ -9,11 +9,9 @@ Language = {};
 ------------------------
 -- Language functions --
 ------------------------
---DONT TOUCH THIS
-
-
+-- DONT TOUCH THIS
 -- This function is changeing the language if there is one given in the file 'config.lua' by the setting 'Config.language'.
--- By default or when a language table is not existing, it will call the english table.
+-- By default or when a language table is not existing, it will call the english table. You do not need to change it here!
 function SelectLanguage(languageString)
 	for lang, translation in pairs(Language) do
 		setmetatable(translation, {

@@ -10,6 +10,9 @@
 Language["english"] = {
     noAccessError   = "[ERROR] CinematicCam: At least one of the following values must be true! Config.useButton, Config.useCommand",
     wrongUIError    = "[ERROR] CinematicCam: Only specify exactly ONE UI in the config file!",
+	
+	noPermission	= "No permission to use this command!",
+	noUIStarted		= "^1NativeUI resource wrong version! Ensure that you are using the linked version from the README file.^1",
 
     menuTitle       = "Cinematic Cam",
     menuSubtitle    = "Control the Cinematic Camera",

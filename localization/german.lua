@@ -10,6 +10,9 @@ Language["german"] = {
     noAccessError   = "[Fehler] CinematicCam: Mindestens einer der folgenden Variablen muss zutreffen: Config.useButton oder Config.useCommand und keine der beiden trifft gerade zu!",
     wrongUIError    = "[Fehler] CinematicCam: In der config.lua darf maximal eine UI angegeben werden, es sind gerade mehrere aktiv!",
     
+	noPermission	= "Keine Freigabe um dies zu nutzen!",
+	noUIStarted		= "^1NativeUI hat die falsche Version! Stelle sicher, dass du die verlinkte Version aus der README Datei nutzt.^0",
+	
     menuTitle       = "CinematicCam",
     menuSubtitle    = "Die CinematicCam Kontrollen",
 
