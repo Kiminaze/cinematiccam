@@ -715,7 +715,7 @@ if (Config.useCommand) then
                 camMenu:Visible(true)
             end
         else
-            print("No permission to use this command!")
+            print(Config.strings.noPermission)
         end
     end)
 end

@@ -1,7 +1,7 @@
 --------------------------------------------------
 ---- CINEMATIC CAM FOR FIVEM MADE BY KIMINAZE ----
 --------------------------------------------------
---time cycle modifier zum suchen
+-- time cycle modifier
 
 -- list of available filters ( https://pastebin.com/kVPwMemE )
 Config.filterList = {

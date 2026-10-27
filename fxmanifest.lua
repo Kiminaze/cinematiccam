@@ -7,10 +7,14 @@ games { "gta5" }
 
 author "Philipp Decker"
 description "Cinematic camera for fancy screenshots or videos!"
-version "1.1.0"
+version "1.1.1"
 
 server_scripts {
-	"server/permission.lua"
+	"@NativeUI/NativeUI.lua", -- Please check that your NativeUI script file is named like this!
+	"client/language.lua",
+	"localization/*.lua", -- This will load all localization files, no need to add them.
+	"config.lua",
+	"server/server.lua"
 }
 
 client_scripts {
